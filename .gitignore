@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Tauri build output
+src-tauri/target/
+src-tauri/binaries/*.exe
+
+# Python environment (bundled WinPython64)
+backend/WPy64-312101/
+
+# Python cache
+__pycache__/
+
+# Models (large files)
+backend/models/
+
+# Audio tools (ffmpeg/sox binaries)
+backend/bin/tools/
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*

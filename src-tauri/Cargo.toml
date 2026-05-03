@@ -1,0 +1,27 @@
+[package]
+name = "qianyu-desktop"
+version = "1.0.0"
+description = "QianYU TTS Desktop Application"
+authors = ["QianYU Team"]
+edition = "2021"
+
+[lib]
+name = "qianyu_desktop_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.11", features = ["json"] }
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+tauri-plugin-dialog = "2.7.1"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
