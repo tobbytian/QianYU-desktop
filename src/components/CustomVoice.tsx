@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTTS } from "@/hooks/useTTS";
-import { generateCustomVoice } from "@/services/api";
+import { generateCustomVoiceStreaming } from "@/services/api";
 import { AudioPlayer } from "./AudioPlayer";
 import { Loader2, Volume2, User } from "lucide-react";
 
@@ -10,15 +10,15 @@ const LANGUAGES = [
 ];
 
 const SPEAKERS = [
-  { id: "Vivian", name: "Vivian", description: "温柔女声" },
-  { id: "Serena", name: "Serena", description: "优雅女声" },
-  { id: "Uncle_Fu", name: "Uncle Fu", description: "沉稳男声" },
-  { id: "Dylan", name: "Dylan", description: "活力男声" },
-  { id: "Eric", name: "Eric", description: "磁性男声" },
-  { id: "Ryan", name: "Ryan", description: "阳光男声" },
-  { id: "Aiden", name: "Aiden", description: "少年音" },
-  { id: "Ono_Anna", name: "Ono Anna", description: "日系女声" },
-  { id: "Sohee", name: "Sohee", description: "韩系女声" },
+  { id: "Vivian", name: "Vivian", description: "明亮微锐的年轻女声" },
+  { id: "Serena", name: "Serena", description: "温暖柔和的年轻女声" },
+  { id: "Uncle_Fu", name: "Uncle Fu", description: "低沉浑厚的成熟男声" },
+  { id: "Dylan", name: "Dylan", description: "清脆自然的北京男声" },
+  { id: "Eric", name: "Eric", description: "微沙明亮的成都男声" },
+  { id: "Ryan", name: "Ryan", description: "节奏感强的活力男声" },
+  { id: "Aiden", name: "Aiden", description: "清亮中频的阳光美式男声" },
+  { id: "Ono_Anna", name: "Ono Anna", description: "轻盈灵动的日系女声" },
+  { id: "Sohee", name: "Sohee", description: "情感丰富的韩系女声" },
 ];
 
 const STYLE_EXAMPLES = [
@@ -31,11 +31,11 @@ export function CustomVoice() {
   const [speaker, setSpeaker] = useState("Vivian");
   const [instruct, setInstruct] = useState("");
 
-  const { loading, error, audioUrl, duration, generate, cleanup } = useTTS();
+  const { loading, error, audioUrl, duration, streamingProgress, streamingPlayback, generateStreaming, stopGeneration, cleanup } = useTTS();
 
   const handleGenerate = async () => {
     if (!text.trim()) return;
-    await generate(() => generateCustomVoice(text.trim(), language, speaker, instruct));
+    await generateStreaming(() => generateCustomVoiceStreaming(text.trim(), language, speaker, instruct));
   };
 
   return (
@@ -120,24 +120,40 @@ export function CustomVoice() {
           </div>
         </div>
 
-        <button
-          onClick={handleGenerate}
-          disabled={loading || !text.trim()}
-          className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              <span>生成中...</span>
-            </>
-          ) : (
-            <>
-              <Volume2 className="w-5 h-5" />
-              <span>开始合成</span>
-            </>
-          )}
-        </button>
+        {loading ? (
+          <button
+            onClick={stopGeneration}
+            className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all"
+          >
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span>停止生成</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleGenerate}
+            disabled={!text.trim()}
+            className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <Volume2 className="w-5 h-5" />
+            <span>开始合成</span>
+          </button>
+        )}
       </div>
+
+      {loading && streamingProgress && (
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-blue-700 font-medium">生成中...</span>
+            <span className="text-blue-600 text-xs">{(streamingProgress.elapsed / 1000).toFixed(1)}s</span>
+          </div>
+          <div className="w-full bg-blue-100 rounded-full h-2 overflow-hidden">
+            <div className="h-full bg-blue-500 rounded-full animate-pulse w-full" />
+          </div>
+          {streamingProgress.firstChunkTime !== null && (
+            <p className="text-blue-500 text-xs">首字延迟: {(streamingProgress.firstChunkTime / 1000).toFixed(2)}s</p>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -149,6 +165,7 @@ export function CustomVoice() {
         url={audioUrl}
         duration={duration}
         onCleanup={cleanup}
+        streamingPlayback={streamingPlayback}
       />
     </div>
   );

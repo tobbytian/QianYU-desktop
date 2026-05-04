@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { VoiceDesign } from "./components/VoiceDesign";
 import { VoiceClone } from "./components/VoiceClone";
 import { CustomVoice } from "./components/CustomVoice";
+import { VoiceManager } from "./components/VoiceManager";
 import { Settings } from "./components/Settings";
 import { healthCheck, type HealthResponse } from "./services/api";
 import {
@@ -11,9 +12,10 @@ import {
   Volume2,
   Loader2,
   RefreshCw,
+  Users,
 } from "lucide-react";
 
-type Tab = "voice-design" | "voice-clone" | "custom-voice" | "settings";
+type Tab = "voice-design" | "voice-clone" | "custom-voice" | "voice-manager" | "settings";
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>("voice-design");
@@ -59,6 +61,12 @@ function App() {
       label: "自定义音色",
       icon: Volume2,
       description: "使用预设高质量说话人",
+    },
+    {
+      id: "voice-manager" as Tab,
+      label: "音色管理",
+      icon: Users,
+      description: "管理已保存的音色",
     },
     {
       id: "settings" as Tab,
@@ -184,6 +192,7 @@ function App() {
               {activeTab === "voice-design" && <VoiceDesign />}
               {activeTab === "voice-clone" && <VoiceClone />}
               {activeTab === "custom-voice" && <CustomVoice />}
+              {activeTab === "voice-manager" && <VoiceManager />}
               {activeTab === "settings" && <Settings health={health} onRefresh={checkHealth} />}
             </div>
           </div>

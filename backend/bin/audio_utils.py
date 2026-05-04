@@ -1,8 +1,39 @@
 """Audio processing utilities - shared between API server and WebUI."""
 import io
+import os
 import struct
+import shutil
+import subprocess
+import tempfile
 import numpy as np
 import torch
+
+
+def convert_to_wav(input_path: str) -> str:
+    """Convert any audio file to WAV using ffmpeg. Returns path to new WAV temp file.
+
+    If the input is already WAV, returns the original path.
+    The caller is responsible for deleting the returned temp file if it differs from input.
+    """
+    ext = os.path.splitext(input_path)[1].lower()
+    if ext == ".wav":
+        return input_path
+
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg is None:
+        raise RuntimeError("ffmpeg not found in PATH - cannot convert audio format")
+
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
+    tmp.close()
+    try:
+        subprocess.run(
+            [ffmpeg, "-y", "-i", input_path, "-ar", "24000", "-ac", "1", tmp.name],
+            capture_output=True, check=True,
+        )
+        return tmp.name
+    except subprocess.CalledProcessError as e:
+        os.unlink(tmp.name)
+        raise RuntimeError(f"ffmpeg conversion failed: {e.stderr.decode(errors='replace')}")
 
 
 def tensor_to_numpy(audio):

@@ -733,6 +733,22 @@ class FasterQwen3TTS:
 
         return talker_input_embeds, talker_attention_mask, trailing_text_hiddens, tts_pad_embed
 
+    def create_voice_clone_prompt(
+        self,
+        ref_audio: Union[str, Path],
+        ref_text: Optional[str] = None,
+        x_vector_only_mode: bool = False,
+    ):
+        """Create a reusable voice clone prompt from reference audio.
+
+        Delegates to the underlying Qwen3TTSModel.create_voice_clone_prompt().
+        """
+        return self.model.create_voice_clone_prompt(
+            ref_audio=ref_audio,
+            ref_text=ref_text,
+            x_vector_only_mode=x_vector_only_mode,
+        )
+
     @torch.inference_mode()
     def generate_voice_clone(
         self,

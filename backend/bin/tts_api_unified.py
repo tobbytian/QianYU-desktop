@@ -10,6 +10,8 @@ Usage:
 import env_setup  # noqa: F401 - sets up PATH, sys.path, offline mode
 
 import os
+import io
+import json
 import logging
 import queue
 import threading
@@ -36,7 +38,7 @@ from voice_manager import (
     get_saved_voices, load_voice, parse_voice_items,
     VOICE_CACHE, SAVED_VOICES_DIR,
 )
-from audio_utils import tensor_to_numpy, to_pcm16, wav_header, wav_header_streaming
+from audio_utils import tensor_to_numpy, to_pcm16, wav_header, wav_header_streaming, convert_to_wav
 from model_utils import detect_device, unload_model as _unload_model_base
 
 logging.basicConfig(
@@ -406,18 +408,22 @@ async def save_voice_endpoint(
 ):
     """Save a voice from reference audio for later reuse."""
     tmp_path = None
+    wav_path = None
     try:
         suffix = os.path.splitext(ref_audio.filename or ".wav")[1] or ".wav"
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
             shutil.copyfileobj(ref_audio.file, tmp)
             tmp_path = tmp.name
 
+        wav_path = convert_to_wav(tmp_path)
+        audio_path = wav_path if wav_path != tmp_path else tmp_path
+
         model = load_model_for("voice_clone")
         use_xvec = not ref_text or not ref_text.strip()
 
         with _model_lock:
             items = model.create_voice_clone_prompt(
-                ref_audio=tmp_path,
+                ref_audio=audio_path,
                 ref_text=ref_text if not use_xvec else None,
                 x_vector_only_mode=use_xvec,
             )
@@ -459,6 +465,8 @@ async def save_voice_endpoint(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
+        if wav_path and wav_path != tmp_path and os.path.exists(wav_path):
+            os.unlink(wav_path)
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
@@ -477,6 +485,140 @@ async def delete_voice_endpoint(voice_id: str):
     return {"status": "deleted", "voice_id": voice_id}
 
 
+@app.patch("/v1/voices/{voice_id}")
+async def rename_voice_endpoint(voice_id: str, name: str = Form(...)):
+    registry = get_voice_registry()
+    for v in registry["voices"]:
+        if v["id"] == voice_id:
+            v["name"] = name
+            save_voice_registry(registry)
+            return {"status": "renamed", "voice_id": voice_id, "name": name}
+    raise HTTPException(status_code=404, detail=f"Voice '{voice_id}' not found")
+
+
+@app.post("/v1/voices/batch-delete")
+async def batch_delete_voices(voice_ids: list[str] = Form(...)):
+    deleted = []
+    for voice_id in voice_ids:
+        voice_file = os.path.join(SAVED_VOICES_DIR, f"{voice_id}.pt")
+        if os.path.exists(voice_file):
+            os.remove(voice_file)
+        if voice_id in VOICE_CACHE:
+            del VOICE_CACHE[voice_id]
+        deleted.append(voice_id)
+
+    registry = get_voice_registry()
+    registry["voices"] = [v for v in registry["voices"] if v["id"] not in voice_ids]
+    save_voice_registry(registry)
+    return {"status": "deleted", "deleted": deleted}
+
+
+@app.get("/v1/voices/export")
+async def export_voices(voice_ids: str = ""):
+    import base64
+    ids = [v.strip() for v in voice_ids.split(",") if v.strip()] if voice_ids else []
+    registry = get_voice_registry()
+    voices_to_export = registry["voices"] if not ids else [v for v in registry["voices"] if v["id"] in ids]
+
+    export_data = []
+    for v in voices_to_export:
+        voice_file = os.path.join(SAVED_VOICES_DIR, f"{v['id']}.pt")
+        if not os.path.exists(voice_file):
+            continue
+        payload = torch.load(voice_file, map_location="cpu", weights_only=False)
+        data_bytes = torch.save(payload, buf := io.BytesIO())
+        buf.seek(0)
+        export_data.append({
+            "id": v["id"],
+            "name": v["name"],
+            "created_at": v.get("created_at", ""),
+            "ref_text": v.get("ref_text", ""),
+            "data_b64": base64.b64encode(buf.getvalue()).decode("ascii"),
+        })
+
+    return {"voices": export_data}
+
+
+@app.post("/v1/voices/import")
+async def import_voices(file: UploadFile = File(...)):
+    import base64
+    import zipfile
+
+    tmp_path = None
+    try:
+        suffix = os.path.splitext(file.filename or ".zip")[1] or ".zip"
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+            shutil.copyfileobj(file.file, tmp)
+            tmp_path = tmp.name
+
+        registry = get_voice_registry()
+        existing_ids = {v["id"] for v in registry["voices"]}
+        imported = []
+
+        if suffix == ".json":
+            with open(tmp_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for v in data.get("voices", []):
+                voice_id = v.get("id")
+                if not voice_id or voice_id in existing_ids:
+                    voice_id = get_next_voice_id()
+                voice_file = os.path.join(SAVED_VOICES_DIR, f"{voice_id}.pt")
+                pt_bytes = base64.b64decode(v["data_b64"])
+                with open(voice_file, "wb") as f:
+                    f.write(pt_bytes)
+                registry["voices"].append({
+                    "id": voice_id,
+                    "name": v.get("name", voice_id),
+                    "created_at": v.get("created_at", ""),
+                    "ref_text": v.get("ref_text", ""),
+                })
+                imported.append(voice_id)
+        elif suffix == ".zip":
+            with zipfile.ZipFile(tmp_path, "r") as zf:
+                for name in zf.namelist():
+                    if not name.endswith(".pt"):
+                        continue
+                    voice_id = os.path.splitext(os.path.basename(name))[0]
+                    if voice_id in existing_ids:
+                        continue
+                    data = zf.read(name)
+                    voice_file = os.path.join(SAVED_VOICES_DIR, f"{voice_id}.pt")
+                    with open(voice_file, "wb") as f:
+                        f.write(data)
+                    payload = torch.load(voice_file, map_location="cpu", weights_only=False)
+                    meta = payload.get("metadata", {})
+                    registry["voices"].append({
+                        "id": voice_id,
+                        "name": meta.get("name", voice_id),
+                        "created_at": meta.get("created_at", ""),
+                        "ref_text": meta.get("ref_text", ""),
+                    })
+                    imported.append(voice_id)
+        else:
+            payload = torch.load(tmp_path, map_location="cpu", weights_only=False)
+            meta = payload.get("metadata", {})
+            voice_id = get_next_voice_id()
+            voice_file = os.path.join(SAVED_VOICES_DIR, f"{voice_id}.pt")
+            shutil.copy2(tmp_path, voice_file)
+            registry["voices"].append({
+                "id": voice_id,
+                "name": meta.get("name", voice_id),
+                "created_at": meta.get("created_at", ""),
+                "ref_text": meta.get("ref_text", ""),
+            })
+            imported.append(voice_id)
+
+        save_voice_registry(registry)
+        return {"status": "imported", "imported": imported}
+    except Exception as e:
+        logger.error(f"Import failed: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if tmp_path and os.path.exists(tmp_path):
+            os.unlink(tmp_path)
+
+
 @app.post("/v1/audio/speech")
 async def create_speech(req: SpeechRequest):
     if not req.input.strip():
@@ -487,17 +629,7 @@ async def create_speech(req: SpeechRequest):
     streaming = get_mode()
 
     try:
-        # ── Voice Design mode ──
-        if req.voice_description and req.voice_description.strip():
-            instruct = req.voice_description.strip()
-            logger.info(f"Voice Design: instruct='{instruct[:40]}...', streaming={streaming}")
-            if streaming:
-                return _wav_streaming_response(stream_voice_design(req.input, instruct, language), fmt)
-            else:
-                pcm = await generate_voice_design_sync(req.input, instruct, language)
-                return _wav_response(pcm, fmt)
-
-        # ── Custom Voice mode ──
+        # ── Custom Voice mode (must check before Voice Design, since it also uses voice_description) ──
         if req.speaker and req.speaker.strip():
             speaker = req.speaker.strip()
             instruct = req.voice_description.strip() if req.voice_description else ""
@@ -506,6 +638,16 @@ async def create_speech(req: SpeechRequest):
                 return _wav_streaming_response(stream_custom_voice(req.input, language, speaker, instruct), fmt)
             else:
                 pcm = await generate_custom_voice_sync(req.input, language, speaker, instruct)
+                return _wav_response(pcm, fmt)
+
+        # ── Voice Design mode ──
+        if req.voice_description and req.voice_description.strip():
+            instruct = req.voice_description.strip()
+            logger.info(f"Voice Design: instruct='{instruct[:40]}...', streaming={streaming}")
+            if streaming:
+                return _wav_streaming_response(stream_voice_design(req.input, instruct, language), fmt)
+            else:
+                pcm = await generate_voice_design_sync(req.input, instruct, language)
                 return _wav_response(pcm, fmt)
 
         # ── Voice Clone mode (saved voice) ──
@@ -549,17 +691,21 @@ async def create_speech_upload(
     streaming = get_mode()
 
     tmp_path = None
+    wav_path = None
     try:
         suffix = os.path.splitext(ref_audio.filename or ".wav")[1] or ".wav"
         with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
             shutil.copyfileobj(ref_audio.file, tmp)
             tmp_path = tmp.name
 
+        wav_path = convert_to_wav(tmp_path)
+        audio_path = wav_path if wav_path != tmp_path else tmp_path
+
         logger.info(f"Voice Clone (upload): ref={ref_audio.filename}, streaming={streaming}")
         if streaming:
-            return _wav_streaming_response(stream_voice_clone(text, language, tmp_path, ref_text), fmt)
+            return _wav_streaming_response(stream_voice_clone(text, language, audio_path, ref_text), fmt)
         else:
-            pcm = await generate_voice_clone_sync(text, language, tmp_path, ref_text)
+            pcm = await generate_voice_clone_sync(text, language, audio_path, ref_text)
             return _wav_response(pcm, fmt)
 
     except HTTPException:
@@ -569,6 +715,8 @@ async def create_speech_upload(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
     finally:
+        if wav_path and wav_path != tmp_path and os.path.exists(wav_path):
+            os.unlink(wav_path)
         if tmp_path and os.path.exists(tmp_path):
             os.unlink(tmp_path)
 

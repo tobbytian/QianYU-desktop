@@ -128,7 +128,7 @@ async fn generate_audio(
         .clone()
         .ok_or("Server not connected")?;
 
-    make_request(&server_url, "POST", "/api/generate", Some(request)).await
+    make_request(&server_url, "POST", "/v1/audio/speech", Some(request)).await
 }
 
 #[tauri::command]
@@ -140,7 +140,7 @@ async fn get_voices(state: State<'_, AppState>) -> Result<Vec<Voice>, String> {
         .clone()
         .ok_or("Server not connected")?;
 
-    make_request(&server_url, "GET", "/api/voices", None::<()>).await
+    make_request(&server_url, "GET", "/v1/voices", None::<()>).await
 }
 
 #[tauri::command]
@@ -163,7 +163,7 @@ async fn save_voice(
         "ref_text": ref_text
     });
 
-    let result: serde_json::Value = make_request(&server_url, "POST", "/api/voices", Some(body)).await?;
+    let result: serde_json::Value = make_request(&server_url, "POST", "/v1/voices", Some(body)).await?;
     Ok(result["voice_id"].as_str().unwrap_or("").to_string())
 }
 
@@ -176,7 +176,7 @@ async fn delete_voice(state: State<'_, AppState>, voice_id: String) -> Result<()
         .clone()
         .ok_or("Server not connected")?;
 
-    make_request(&server_url, "DELETE", &format!("/api/voices/{}", voice_id), None::<()>).await
+    make_request(&server_url, "DELETE", &format!("/v1/voices/{}", voice_id), None::<()>).await
 }
 
 #[tauri::command]
@@ -188,7 +188,7 @@ async fn health_check(state: State<'_, AppState>) -> Result<HealthResponse, Stri
         .clone()
         .ok_or("Server not connected")?;
 
-    make_request(&server_url, "GET", "/api/health", None::<()>).await
+    make_request(&server_url, "GET", "/health", None::<()>).await
 }
 
 #[tauri::command]
@@ -200,7 +200,7 @@ async fn get_model_paths(state: State<'_, AppState>) -> Result<ModelPathsRespons
         .clone()
         .ok_or("Server not connected")?;
 
-    make_request(&server_url, "GET", "/api/model/paths", None::<()>).await
+    make_request(&server_url, "GET", "/api/models", None::<()>).await
 }
 
 #[tauri::command]
@@ -236,7 +236,7 @@ async fn load_model(
         model_path,
     };
 
-    make_request(&server_url, "POST", "/api/model/load", Some(request)).await
+    make_request(&server_url, "POST", "/api/models/load", Some(request)).await
 }
 
 #[tauri::command]
@@ -251,16 +251,33 @@ async fn open_folder_dialog(app: tauri::AppHandle) -> Result<Option<String>, Str
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FileFilter {
+    pub name: String,
+    pub extensions: Vec<String>,
+}
+
 #[tauri::command]
-async fn open_save_dialog(app: tauri::AppHandle, default_filename: String) -> Result<Option<String>, String> {
+async fn open_save_dialog(
+    app: tauri::AppHandle,
+    default_filename: String,
+    filters: Option<Vec<FileFilter>>,
+) -> Result<Option<String>, String> {
     use tauri_plugin_dialog::DialogExt;
-    
-    let path = app.dialog()
-        .file()
-        .set_file_name(&default_filename)
-        .add_filter("WAV Audio", &["wav"])
-        .blocking_save_file();
-    
+
+    let mut dialog = app.dialog().file().set_file_name(&default_filename);
+
+    if let Some(filters) = filters {
+        for filter in filters {
+            let exts: Vec<&str> = filter.extensions.iter().map(|s| s.as_str()).collect();
+            dialog = dialog.add_filter(&filter.name, &exts);
+        }
+    } else {
+        dialog = dialog.add_filter("WAV Audio", &["wav"]);
+    }
+
+    let path = dialog.blocking_save_file();
+
     match path {
         Some(p) => Ok(Some(p.to_string())),
         None => Ok(None),
