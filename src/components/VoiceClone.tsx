@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useTTS } from "@/hooks/useTTS";
+import { generateVoiceCloneUpload } from "@/services/api";
 import { AudioPlayer } from "./AudioPlayer";
 import { Loader2, Copy, Upload } from "lucide-react";
 
@@ -11,27 +12,22 @@ const LANGUAGES = [
 export function VoiceClone() {
   const [text, setText] = useState("你好，很高兴见到你。");
   const [language, setLanguage] = useState("Auto");
-  const [refAudioPath, setRefAudioPath] = useState<string | null>(null);
+  const [refAudioFile, setRefAudioFile] = useState<File | null>(null);
+  const [refText, setRefText] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { loading, error, audioUrl, audioData, sampleRate, duration, generate, cleanup } = useTTS();
+  const { loading, error, audioUrl, duration, generate, cleanup } = useTTS();
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // 在实际应用中，需要将文件路径传递给后端
-      // 这里假设文件已经在服务器可访问的路径
-      setRefAudioPath(file.name);
+      setRefAudioFile(file);
     }
   };
 
   const handleGenerate = async () => {
-    if (!text.trim()) return;
-    await generate({
-      text: text.trim(),
-      language,
-      ref_audio_path: refAudioPath || undefined,
-    });
+    if (!text.trim() || !refAudioFile) return;
+    await generate(() => generateVoiceCloneUpload(text.trim(), language, refAudioFile, refText));
   };
 
   return (
@@ -79,14 +75,14 @@ export function VoiceClone() {
               onChange={handleFileSelect}
               className="hidden"
             />
-            {refAudioPath ? (
+            {refAudioFile ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-center space-x-2 text-primary-600">
                   <Upload className="w-5 h-5" />
-                  <span className="font-medium">{refAudioPath}</span>
+                  <span className="font-medium">{refAudioFile.name}</span>
                 </div>
                 <button
-                  onClick={() => setRefAudioPath(null)}
+                  onClick={() => setRefAudioFile(null)}
                   className="text-sm text-red-600 hover:text-red-700"
                 >
                   移除
@@ -102,9 +98,20 @@ export function VoiceClone() {
           </div>
         </div>
 
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">参考文本（可选）</label>
+          <input
+            type="text"
+            value={refText}
+            onChange={(e) => setRefText(e.target.value)}
+            placeholder="参考音频中的台词，留空则使用零样本模式"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+          />
+        </div>
+
         <button
           onClick={handleGenerate}
-          disabled={loading || !text.trim()}
+          disabled={loading || !text.trim() || !refAudioFile}
           className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
         >
           {loading ? (
@@ -127,15 +134,11 @@ export function VoiceClone() {
         </div>
       )}
 
-      {audioUrl && (
-        <AudioPlayer
-          url={audioUrl}
-          duration={duration}
-          audioData={audioData || undefined}
-          sampleRate={sampleRate}
-          onCleanup={cleanup}
-        />
-      )}
+      <AudioPlayer
+        url={audioUrl}
+        duration={duration}
+        onCleanup={cleanup}
+      />
     </div>
   );
 }

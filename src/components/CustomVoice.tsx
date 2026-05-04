@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTTS } from "@/hooks/useTTS";
+import { generateCustomVoice } from "@/services/api";
 import { AudioPlayer } from "./AudioPlayer";
 import { Loader2, Volume2, User } from "lucide-react";
 
@@ -30,16 +31,11 @@ export function CustomVoice() {
   const [speaker, setSpeaker] = useState("Vivian");
   const [instruct, setInstruct] = useState("");
 
-  const { loading, error, audioUrl, audioData, sampleRate, duration, generate, cleanup } = useTTS();
+  const { loading, error, audioUrl, duration, generate, cleanup } = useTTS();
 
   const handleGenerate = async () => {
     if (!text.trim()) return;
-    await generate({
-      text: text.trim(),
-      language,
-      speaker,
-      voice_description: instruct || undefined,
-    });
+    await generate(() => generateCustomVoice(text.trim(), language, speaker, instruct));
   };
 
   return (
@@ -149,15 +145,11 @@ export function CustomVoice() {
         </div>
       )}
 
-      {audioUrl && (
-        <AudioPlayer
-          url={audioUrl}
-          duration={duration}
-          audioData={audioData || undefined}
-          sampleRate={sampleRate}
-          onCleanup={cleanup}
-        />
-      )}
+      <AudioPlayer
+        url={audioUrl}
+        duration={duration}
+        onCleanup={cleanup}
+      />
     </div>
   );
 }

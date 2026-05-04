@@ -273,6 +273,11 @@ async fn save_audio_file(file_path: String, audio_data: Vec<f32>, sample_rate: u
     std::fs::write(&file_path, wav_bytes).map_err(|e| format!("Failed to save file: {}", e))
 }
 
+#[tauri::command]
+async fn save_bytes(file_path: String, data: Vec<u8>) -> Result<(), String> {
+    std::fs::write(&file_path, data).map_err(|e| format!("Failed to save file: {}", e))
+}
+
 fn convert_to_wav(audio_data: &[f32], sample_rate: u32) -> Vec<u8> {
     let num_channels: u16 = 1;
     let bits_per_sample: u16 = 16;
@@ -335,7 +340,8 @@ pub fn run() {
             load_model,
             open_folder_dialog,
             open_save_dialog,
-            save_audio_file
+            save_audio_file,
+            save_bytes
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

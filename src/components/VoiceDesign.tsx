@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTTS } from "@/hooks/useTTS";
+import { generateVoiceDesign } from "@/services/api";
 import { AudioPlayer } from "./AudioPlayer";
 import { Loader2, Mic, Wand2 } from "lucide-react";
 
@@ -17,15 +18,11 @@ export function VoiceDesign() {
   const [language, setLanguage] = useState("Auto");
   const [description, setDescription] = useState("");
 
-  const { loading, error, audioUrl, audioData, sampleRate, duration, generate, cleanup } = useTTS();
+  const { loading, error, audioUrl, duration, generate, cleanup } = useTTS();
 
   const handleGenerate = async () => {
     if (!text.trim()) return;
-    await generate({
-      text: text.trim(),
-      language,
-      voice_description: description || undefined,
-    });
+    await generate(() => generateVoiceDesign(text.trim(), language, description));
   };
 
   return (
@@ -112,15 +109,11 @@ export function VoiceDesign() {
         </div>
       )}
 
-      {audioUrl && (
-        <AudioPlayer
-          url={audioUrl}
-          duration={duration}
-          audioData={audioData || undefined}
-          sampleRate={sampleRate}
-          onCleanup={cleanup}
-        />
-      )}
+      <AudioPlayer
+        url={audioUrl}
+        duration={duration}
+        onCleanup={cleanup}
+      />
     </div>
   );
 }

@@ -30,42 +30,43 @@ os.environ["MODELSCOPE_OFFLINE"] = "1"
 os.environ["PYTHONHTTPSVERIFY"] = "0"
 
 # 导入项目模块
-from env_setup import PROJECT_ROOT as ENV_PROJECT_ROOT
-from tts_api_unified import app, load_model, DEFAULT_VOICE_ID
+from tts_api_unified import app, load_model_for
 
 def main():
     parser = argparse.ArgumentParser(description="QianYU TTS Server")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind to")
     parser.add_argument("--port", type=int, default=8088, help="Port to bind to")
-    parser.add_argument("--voice-id", "-v", default=DEFAULT_VOICE_ID, help="Default voice ID")
     parser.add_argument("--mode", choices=["streaming", "non-streaming"], default="streaming", help="Initial mode")
-    parser.add_argument("--preload", action="store_true", help="Preload model at startup")
+    parser.add_argument("--preload", action="store_true", help="Preload voice_design model at startup")
     args = parser.parse_args()
-
-    # 更新原项目的模型路径
-    import tts_api_unified
-    tts_api_unified.MODEL_PATH = str(MODELS_DIR / "Qwen3-TTS-12Hz-1.7B-Base")
 
     print(f"=" * 60)
     print(f"QianYU TTS Server")
     print(f"=" * 60)
     print(f"Project root: {PROJECT_ROOT}")
     print(f"Models directory: {MODELS_DIR}")
-    print(f"Default model: {tts_api_unified.MODEL_PATH}")
     print(f"Server: http://{args.host}:{args.port}")
-    print(f"Voice ID: {args.voice_id}")
     print(f"Mode: {args.mode}")
     print(f"=" * 60)
 
     if args.preload:
-        print("Preloading model...")
+        print("Preloading voice_design model...")
         try:
-            load_model()
+            load_model_for("voice_design")
             print("Model preloaded successfully!")
         except Exception as e:
             print(f"Preload failed: {e}")
 
     import uvicorn
+    import socket as _socket
+
+    _orig_socket = _socket.socket
+    class _ReusableSocket(_orig_socket):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.setsockopt(_socket.SOL_SOCKET, _socket.SO_REUSEADDR, 1)
+    _socket.socket = _ReusableSocket
+
     uvicorn.run(app, host=args.host, port=args.port, log_level="info")
 
 if __name__ == "__main__":

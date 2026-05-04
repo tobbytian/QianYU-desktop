@@ -2,121 +2,98 @@ import { useRef, useEffect, useCallback, useState } from "react";
 
 interface WaveformVisualizerProps {
   audioUrl: string;
-  currentTime: number;
   duration: number;
   onSeek: (time: number) => void;
 }
 
+const CANVAS_HEIGHT = 64;
+const BAR_COUNT = 200;
+
 export function WaveformVisualizer({
   audioUrl,
-  currentTime,
   duration,
   onSeek,
 }: WaveformVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [waveformData, setWaveformData] = useState<number[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const drawnRef = useRef(false);
+  const [bars, setBars] = useState<number[]>([]);
 
-  // Extract waveform data from audio
   useEffect(() => {
     if (!audioUrl) return;
 
-    setIsLoading(true);
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    drawnRef.current = false;
+    setBars([]);
+
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
 
     fetch(audioUrl)
-      .then((response) => response.arrayBuffer())
-      .then((arrayBuffer) => audioContext.decodeAudioData(arrayBuffer))
-      .then((audioBuffer) => {
-        const channelData = audioBuffer.getChannelData(0);
-        const samples = 200; // Number of bars in waveform
-        const blockSize = Math.floor(channelData.length / samples);
-        const waveform: number[] = [];
-
-        for (let i = 0; i < samples; i++) {
+      .then((r) => r.arrayBuffer())
+      .then((buf) => ctx.decodeAudioData(buf))
+      .then((ab) => {
+        const data = ab.getChannelData(0);
+        const blockSize = Math.floor(data.length / BAR_COUNT);
+        const result: number[] = [];
+        for (let i = 0; i < BAR_COUNT; i++) {
           let sum = 0;
           for (let j = 0; j < blockSize; j++) {
-            sum += Math.abs(channelData[i * blockSize + j]);
+            sum += Math.abs(data[i * blockSize + j]);
           }
-          waveform.push(sum / blockSize);
+          result.push(sum / blockSize);
         }
-
-        // Normalize
-        const max = Math.max(...waveform);
-        if (max > 0) {
-          setWaveformData(waveform.map((v) => v / max));
-        } else {
-          setWaveformData(waveform);
-        }
-        setIsLoading(false);
+        const max = Math.max(...result);
+        setBars(max > 0 ? result.map((v) => v / max) : result);
+        ctx.close();
       })
-      .catch((err) => {
-        console.error("Failed to decode audio:", err);
-        setIsLoading(false);
-      });
-
-    return () => {
-      audioContext.close();
-    };
+      .catch(() => ctx.close());
   }, [audioUrl]);
 
-  // Draw waveform
   useEffect(() => {
+    if (bars.length === 0 || drawnRef.current) return;
+
+    const container = containerRef.current;
     const canvas = canvasRef.current;
-    if (!canvas || waveformData.length === 0) return;
+    if (!container || !canvas) return;
 
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const { width, height } = canvas;
+    const width = container.offsetWidth;
     const dpr = window.devicePixelRatio || 1;
     canvas.width = width * dpr;
-    canvas.height = height * dpr;
-    ctx.scale(dpr, dpr);
+    canvas.height = CANVAS_HEIGHT * dpr;
+    canvas.style.width = width + "px";
+    canvas.style.height = CANVAS_HEIGHT + "px";
 
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
+    const c = canvas.getContext("2d");
+    if (!c) return;
 
-    const barWidth = width / waveformData.length;
+    c.scale(dpr, dpr);
+    c.clearRect(0, 0, width, CANVAS_HEIGHT);
+
+    const barWidth = width / bars.length;
     const barGap = 1;
-    const progressRatio = duration > 0 ? currentTime / duration : 0;
 
-    waveformData.forEach((value, index) => {
-      const x = index * barWidth;
-      const barHeight = Math.max(2, value * height * 0.8);
-      const y = (height - barHeight) / 2;
-
-      // Determine color based on progress
-      const isPlayed = index / waveformData.length < progressRatio;
-
-      if (isPlayed) {
-        ctx.fillStyle = "#1d4ed8"; // played - dark blue
-      } else {
-        ctx.fillStyle = "#93c5fd"; // unplayed - light blue
-      }
-
-      // Draw bar
-      ctx.fillRect(x + barGap / 2, y, barWidth - barGap, barHeight);
+    bars.forEach((value, i) => {
+      const x = i * barWidth;
+      const h = Math.max(2, value * CANVAS_HEIGHT * 0.8);
+      const y = (CANVAS_HEIGHT - h) / 2;
+      c.fillStyle = "#93c5fd";
+      c.fillRect(x + barGap / 2, y, barWidth - barGap, h);
     });
-  }, [waveformData, currentTime, duration]);
 
-  // Handle click to seek
+    drawnRef.current = true;
+  }, [bars]);
+
   const handleClick = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current;
-      if (!canvas || duration <= 0) return;
-
-      const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const ratio = x / rect.width;
-      const time = ratio * duration;
-
-      onSeek(Math.max(0, Math.min(duration, time)));
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const container = containerRef.current;
+      if (!container || duration <= 0) return;
+      const rect = container.getBoundingClientRect();
+      const ratio = (e.clientX - rect.left) / rect.width;
+      onSeek(Math.max(0, Math.min(duration, ratio * duration)));
     },
     [duration, onSeek]
   );
 
-  if (isLoading) {
+  if (bars.length === 0) {
     return (
       <div className="h-16 bg-gray-100 rounded-lg flex items-center justify-center">
         <span className="text-sm text-gray-500">Loading waveform...</span>
@@ -124,17 +101,14 @@ export function WaveformVisualizer({
     );
   }
 
-  if (waveformData.length === 0) {
-    return null;
-  }
-
   return (
-    <canvas
-      ref={canvasRef}
-      className="w-full h-16 cursor-pointer rounded-lg bg-gray-50"
-      style={{ width: "100%", height: "64px" }}
+    <div
+      ref={containerRef}
+      className="relative w-full rounded-lg bg-gray-50 overflow-hidden cursor-pointer"
+      style={{ height: CANVAS_HEIGHT }}
       onClick={handleClick}
-      title="Click to seek"
-    />
+    >
+      <canvas ref={canvasRef} className="absolute inset-0" />
+    </div>
   );
 }
