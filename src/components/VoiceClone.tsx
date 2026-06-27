@@ -18,7 +18,7 @@ const LANGUAGES = [
 ];
 
 export function VoiceClone() {
-  const [text, setText] = useState("你好，很高兴见到你。");
+  const [text, setText] = useState("欢迎使用语音克隆功能，上传一段参考音频后，我会尝试用相似的声音朗读这段介绍内容。");
   const [language, setLanguage] = useState("Auto");
   const [refAudioFile, setRefAudioFile] = useState<File | null>(null);
   const [refText, setRefText] = useState("");

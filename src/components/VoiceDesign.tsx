@@ -17,7 +17,7 @@ const EXAMPLE_DESCRIPTIONS = [
 const DEFAULT_DESCRIPTION = "温柔的女声";
 
 export function VoiceDesign() {
-  const [text, setText] = useState("哥哥，你回来啦，人家等了你好久好久了，要抱抱！");
+  const [text, setText] = useState("欢迎使用声音设计功能，你可以用自然语言描述想要的音色，让系统为这段文字生成更贴合场景的声音。");
   const [language, setLanguage] = useState("Auto");
   const [description, setDescription] = useState(DEFAULT_DESCRIPTION);
   const [saveName, setSaveName] = useState("");

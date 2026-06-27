@@ -27,7 +27,7 @@ const STYLE_EXAMPLES = [
 ];
 
 export function CustomVoice() {
-  const [text, setText] = useState("其实我真的有发现，我是一个特别善于观察别人情绪的人。");
+  const [text, setText] = useState("欢迎使用自定义音色功能，你可以选择预设说话人，并添加情绪或风格指令来体验不同的表达效果。");
   const [language, setLanguage] = useState("Auto");
   const [speaker, setSpeaker] = useState("Vivian");
   const [instruct, setInstruct] = useState("");

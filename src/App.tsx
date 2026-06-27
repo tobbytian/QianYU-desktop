@@ -20,6 +20,7 @@ type Tab = "voice-design" | "voice-clone" | "custom-voice" | "voice-manager" | "
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>("voice-design");
+  const [selectedTab, setSelectedTab] = useState<Tab>("voice-design");
   const [isTabFading, setIsTabFading] = useState(false);
   const [health, setHealth] = useState<HealthResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,6 +30,7 @@ function App() {
 
   const loaderStartRef = useRef(Date.now());
   const contentRef = useRef<HTMLDivElement>(null);
+  const pendingTabRef = useRef<Tab>("voice-design");
   const LOADER_MIN_MS = 2000;
 
   const dismissLoader = useCallback(() => {
@@ -37,16 +39,19 @@ function App() {
   }, []);
 
   const handleTabChange = useCallback((nextTab: Tab) => {
-    if (nextTab === activeTab || isTabFading) return;
+    if (nextTab === selectedTab) return;
 
+    setSelectedTab(nextTab);
+    pendingTabRef.current = nextTab;
+    if (isTabFading) return;
     setIsTabFading(true);
     setTimeout(() => {
-      setActiveTab(nextTab);
+      setActiveTab(pendingTabRef.current);
       requestAnimationFrame(() => {
         setIsTabFading(false);
       });
     }, 180);
-  }, [activeTab, isTabFading]);
+  }, [isTabFading, selectedTab]);
 
   useEffect(() => {
     (async () => {
@@ -183,7 +188,7 @@ function App() {
               <div className="space-y-1">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
-                  const isActive = activeTab === tab.id;
+                  const isActive = selectedTab === tab.id;
                   return (
                     <button
                       key={tab.id}
@@ -207,8 +212,9 @@ function App() {
           </nav>
 
           {/* Content Area */}
-          <div ref={contentRef} className="min-w-0 min-h-0 overflow-y-auto">
-            <div className={`min-h-full backdrop-blur-xl bg-white/50 dark:bg-white/[0.04] border border-white/25 dark:border-white/[0.07] rounded-2xl p-6 shadow-xl shadow-black/[0.04] dark:shadow-black/25 transition-opacity duration-[180ms] ease-out ${isTabFading ? "opacity-0" : "opacity-100"}`}>
+          <div className="min-w-0 min-h-0 rounded-2xl overflow-hidden">
+            <div ref={contentRef} className="h-full overflow-y-auto rounded-2xl scrollbar-none">
+              <div className={`min-h-full backdrop-blur-xl bg-white/50 dark:bg-white/[0.04] border border-white/25 dark:border-white/[0.07] rounded-2xl p-6 shadow-xl shadow-black/[0.04] dark:shadow-black/25 transition-opacity duration-[180ms] ease-out ${isTabFading ? "opacity-0" : "opacity-100"}`}>
               <div className={activeTab === "voice-design" ? "block" : "hidden"}>
                 <VoiceDesign />
               </div>
@@ -223,6 +229,7 @@ function App() {
               </div>
               <div className={activeTab === "settings" ? "block" : "hidden"}>
                 <Settings health={health} onRefresh={checkHealth} />
+              </div>
               </div>
             </div>
           </div>
