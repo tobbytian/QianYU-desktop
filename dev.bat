@@ -18,8 +18,8 @@ echo.
 
 start "QianYU TTS Server" cmd /k "cd /d "%PROJECT_ROOT%" && "%PYTHON%" "%SERVER%" --port 8088 --preload"
 
-echo [2/2] Waiting for server to start (20 seconds)...
-timeout /t 20 /nobreak >nul
+echo [2/2] Waiting for server to start (10 seconds)...
+timeout /t 10 /nobreak >nul
 
 echo.
 echo ========================================

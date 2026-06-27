@@ -201,9 +201,9 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
 
   if (!url && !isStreamingMode) {
     return (
-      <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-dashed border-gray-300">
-        <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-          <Music className="w-12 h-12 mb-3" />
+      <div className="backdrop-blur-xl bg-white/40 dark:bg-white/[0.03] rounded-2xl p-6 border border-dashed border-gray-200/60 dark:border-white/[0.08]">
+        <div className="flex flex-col items-center justify-center py-8 text-gray-400 dark:text-gray-500">
+          <Music className="w-12 h-12 mb-3 opacity-40" />
           <p className="text-sm">等待生成音频...</p>
         </div>
       </div>
@@ -212,14 +212,14 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
 
   if (isStreamingMode) {
     return (
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
+      <div className="backdrop-blur-xl bg-gradient-to-br from-gray-900/[0.08] to-gray-900/[0.08] dark:from-white/[0.06] dark:to-white/[0.06] rounded-2xl p-6 border border-gray-300/20 dark:border-gray-400/10 shadow-lg shadow-gray-900/[0.05]">
         <div className="space-y-4">
-          <div className="flex items-center justify-center space-x-2 text-blue-600">
+          <div className="flex items-center justify-center space-x-2 text-gray-700 dark:text-white">
             <Radio className="w-5 h-5 animate-pulse" />
-            <span className="font-medium">正在播放...</span>
+            <span className="font-medium text-sm">正在播放...</span>
           </div>
 
-          <div className="flex justify-between text-sm text-gray-500">
+          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
             <span>{formatTime(currentDisplayTime)}</span>
             <span>{formatTime(currentDuration)}</span>
           </div>
@@ -228,7 +228,7 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
             <div className="flex items-center space-x-4">
               <button
                 onClick={skipBackward}
-                className="p-2 text-gray-300 cursor-not-allowed"
+                className="p-2 text-gray-300 dark:text-gray-600 cursor-not-allowed"
                 disabled
               >
                 <SkipBack className="w-5 h-5" />
@@ -236,7 +236,7 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
 
               <button
                 onClick={togglePlay}
-                className="w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition-colors shadow-lg"
+                className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-900 dark:from-gray-200 dark:to-white text-white rounded-full flex items-center justify-center hover:brightness-110 transition-all duration-200 shadow-lg shadow-gray-900/30 shadow-gray-100/20"
               >
                 {showPlaying ? (
                   <Pause className="w-6 h-6" />
@@ -247,7 +247,7 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
 
               <button
                 onClick={skipForward}
-                className="p-2 text-gray-300 cursor-not-allowed"
+                className="p-2 text-gray-300 dark:text-gray-600 cursor-not-allowed"
                 disabled
               >
                 <SkipForward className="w-5 h-5" />
@@ -257,7 +257,7 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
             <div className="flex items-center space-x-2">
               <button
                 onClick={toggleMute}
-                className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
               >
                 {isMuted ? (
                   <VolumeX className="w-5 h-5" />
@@ -272,12 +272,12 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
                 step="0.05"
                 value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="w-20 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                className="w-20 h-1 bg-gray-200 dark:bg-white/[0.08] rounded-lg appearance-none cursor-pointer accent-gray-700 dark:accent-white"
               />
               {streamingPlayback && (
                 <button
                   onClick={() => streamingPlayback.stopStreaming()}
-                  className="flex items-center space-x-1 px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+                  className="flex items-center space-x-1 px-3 py-2 backdrop-blur-lg bg-white/30 dark:bg-white/[0.06] border border-white/20 dark:border-white/[0.08] text-gray-600 dark:text-gray-300 rounded-xl hover:bg-white/50 dark:hover:bg-white/[0.08] transition-all duration-200 text-sm"
                   title="退出流式播放"
                 >
                   <span>退出</span>
@@ -286,7 +286,7 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
             </div>
           </div>
 
-          <div className="text-center text-sm text-blue-500">
+          <div className="text-center text-xs text-gray-500/70 dark:text-gray-400/50">
             流式播放中 · 实时生成
           </div>
         </div>
@@ -295,7 +295,7 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
   }
 
   return (
-    <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border">
+    <div className="backdrop-blur-xl bg-gradient-to-br from-gray-900/[0.03] to-gray-900/[0.06] dark:from-white/[0.04] dark:to-white/[0.02] rounded-2xl p-6 border border-white/20 dark:border-white/[0.06] shadow-lg shadow-black/[0.04] dark:shadow-black/20">
       <audio ref={audioRef} src={url ?? undefined} preload="auto" />
 
       <div className="space-y-4">
@@ -307,12 +307,12 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
           />
           <div
             ref={playheadRef}
-            className="absolute top-0 h-full w-[2px] bg-blue-700 pointer-events-none will-change-[left]"
+            className="absolute top-0 h-full w-[2px] bg-gradient-to-b from-gray-700 to-gray-900 dark:from-gray-200 dark:to-white pointer-events-none will-change-[left] rounded-full shadow-sm shadow-gray-900/30"
             style={{ left: 0, transform: "translateX(-0.5px)" }}
           />
         </div>
 
-        <div className="flex justify-between text-sm text-gray-500">
+        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
           <span ref={timeRef}>0:00</span>
           <span>{formatTime(duration)}</span>
         </div>
@@ -321,7 +321,7 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
           <div className="flex items-center space-x-4">
             <button
               onClick={skipBackward}
-              className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
               title="后退5秒"
             >
               <SkipBack className="w-5 h-5" />
@@ -329,7 +329,7 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
 
             <button
               onClick={togglePlay}
-              className="w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center hover:bg-primary-700 transition-colors shadow-lg"
+              className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-900 dark:from-gray-200 dark:to-white text-white rounded-full flex items-center justify-center hover:brightness-110 transition-all duration-200 shadow-lg shadow-gray-900/30 shadow-gray-100/20"
             >
               {showPlaying ? (
                 <Pause className="w-6 h-6" />
@@ -340,7 +340,7 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
 
             <button
               onClick={skipForward}
-              className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+              className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
               title="前进5秒"
             >
               <SkipForward className="w-5 h-5" />
@@ -351,7 +351,7 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
             <div className="flex items-center space-x-2">
               <button
                 onClick={toggleMute}
-                className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white transition-colors"
               >
                 {isMuted ? (
                   <VolumeX className="w-5 h-5" />
@@ -366,13 +366,13 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
                 step="0.05"
                 value={isMuted ? 0 : volume}
                 onChange={handleVolumeChange}
-                className="w-20 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                className="w-20 h-1 bg-gray-200 dark:bg-white/[0.08] rounded-lg appearance-none cursor-pointer accent-gray-700 dark:accent-white"
               />
             </div>
 
             <button
               onClick={handleDownload}
-              className="flex items-center space-x-1 px-3 py-2 bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition-colors"
+              className="flex items-center space-x-1 px-3 py-2 backdrop-blur-lg bg-gray-500/10 dark:bg-white/[0.08] border border-gray-300/20 dark:border-gray-400/10 text-gray-700 dark:text-white rounded-xl hover:bg-gray-500/15 dark:hover:bg-white/12 transition-all duration-200"
               title="下载音频"
             >
               <Download className="w-4 h-4" />
@@ -381,7 +381,7 @@ export function AudioPlayer({ url, duration, onCleanup, streamingPlayback }: Aud
           </div>
         </div>
 
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-xs text-gray-400 dark:text-gray-500">
           生成完成 · 时长 {formatTime(duration)} · WAV 格式
         </div>
       </div>

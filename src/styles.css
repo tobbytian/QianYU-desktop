@@ -2,27 +2,104 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+@layer base {
+  :root {
+    --gradient-from: #f7f8fa;
+    --gradient-via: #f0f1f4;
+    --gradient-to: #ebedf0;
+    color-scheme: light;
+  }
+
+  .dark {
+    --gradient-from: #151517;
+    --gradient-via: #1c1c1f;
+    --gradient-to: #111113;
+    color-scheme: dark;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
+  }
+
+  .dark * {
+    scrollbar-color: rgba(156, 163, 175, 0.2) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.4);
+    border-radius: 3px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.2);
+  }
+
+  ::selection {
+    background-color: rgba(100, 100, 100, 0.25);
+    color: inherit;
+  }
+
+  .dark ::selection {
+    background-color: rgba(200, 200, 200, 0.2);
+  }
+}
+
+html {
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #213547;
-  background-color: #ffffff;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
+  scrollbar-gutter: stable;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+  text-rendering: optimizeLegibility;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  color: #1e293b;
+  background: linear-gradient(135deg, var(--gradient-from), var(--gradient-via), var(--gradient-to));
+  background-attachment: fixed;
+  transition: background 0.3s ease;
+}
+
+.dark body {
+  color: #e2e8f0;
 }
 
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+  min-height: 100vh;
+}
+
+/* Theme transition animation */
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+  transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease !important;
+}
+
+/* Force dark text on primary buttons in dark mode */
+.dark button.bg-gradient-to-r.from-gray-700 {
+  color: #020617 !important;
+}
+.dark button.bg-gradient-to-r.from-gray-700 svg {
+  stroke: #020617 !important;
+}
+
+/* Force dark icon color on light-gray gradient backgrounds in dark mode */
+.dark .bg-gradient-to-br.from-gray-700 svg,
+.dark .bg-gradient-to-br.from-gray-500 svg {
+  stroke: #020617 !important;
 }

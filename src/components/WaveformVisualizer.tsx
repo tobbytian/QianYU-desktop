@@ -71,12 +71,28 @@ export function WaveformVisualizer({
     const barWidth = width / bars.length;
     const barGap = 1;
 
+    const isDark = document.documentElement.classList.contains("dark");
+
     bars.forEach((value, i) => {
       const x = i * barWidth;
       const h = Math.max(2, value * CANVAS_HEIGHT * 0.8);
       const y = (CANVAS_HEIGHT - h) / 2;
-      c.fillStyle = "#93c5fd";
-      c.fillRect(x + barGap / 2, y, barWidth - barGap, h);
+
+      const gradient = c.createLinearGradient(x, y, x, y + h);
+      if (isDark) {
+        gradient.addColorStop(0, "rgba(180, 180, 180, 0.9)");
+        gradient.addColorStop(0.5, "rgba(200, 200, 200, 0.95)");
+        gradient.addColorStop(1, "rgba(220, 220, 220, 0.9)");
+      } else {
+        gradient.addColorStop(0, "rgba(80, 80, 80, 0.85)");
+        gradient.addColorStop(0.5, "rgba(100, 100, 100, 0.9)");
+        gradient.addColorStop(1, "rgba(120, 120, 120, 0.85)");
+      }
+
+      c.fillStyle = gradient;
+      c.beginPath();
+      c.roundRect(x + barGap / 2, y, barWidth - barGap, h, 1);
+      c.fill();
     });
 
     drawnRef.current = true;
@@ -95,8 +111,19 @@ export function WaveformVisualizer({
 
   if (bars.length === 0) {
     return (
-      <div className="h-16 bg-gray-100 rounded-lg flex items-center justify-center">
-        <span className="text-sm text-gray-500">Loading waveform...</span>
+      <div className="h-16 backdrop-blur-lg bg-white/40 dark:bg-white/[0.04] rounded-xl flex items-center justify-center overflow-hidden">
+        <div className="flex items-center space-x-1">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="w-1 bg-gray-400/40 dark:bg-gray-400/20 rounded-full animate-pulse"
+              style={{
+                height: `${12 + Math.sin(i * 1.2) * 8}px`,
+                animationDelay: `${i * 0.15}s`,
+              }}
+            />
+          ))}
+        </div>
       </div>
     );
   }
@@ -104,7 +131,7 @@ export function WaveformVisualizer({
   return (
     <div
       ref={containerRef}
-      className="relative w-full rounded-lg bg-gray-50 overflow-hidden cursor-pointer"
+      className="relative w-full rounded-xl backdrop-blur-lg bg-white/15 dark:bg-white/[0.03] overflow-hidden cursor-pointer border border-white/10 dark:border-white/[0.04]"
       style={{ height: CANVAS_HEIGHT }}
       onClick={handleClick}
     >

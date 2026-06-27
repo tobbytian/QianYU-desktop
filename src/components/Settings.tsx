@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Settings as SettingsIcon,
   RefreshCw,
-  CheckCircle,
-  XCircle,
   Cpu,
   Zap,
   Loader2,
@@ -19,6 +17,7 @@ import {
   unloadModel as apiUnloadModel,
   type ModelsResponse,
 } from "@/services/api";
+import { GlassCard, GlassButton } from "./ui";
 
 interface SettingsProps {
   health: HealthResponse | null;
@@ -117,24 +116,27 @@ export function Settings({ health, onRefresh }: SettingsProps) {
 
   return (
     <div className="space-y-6">
+      {/* Title */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-          <SettingsIcon className="w-6 h-6 text-primary-600" />
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-gray-500 to-slate-600 dark:from-gray-400 dark:to-slate-400 rounded-lg flex items-center justify-center">
+            <SettingsIcon className="w-4 h-4 text-white" />
+          </div>
           <span>设置</span>
         </h2>
-        <p className="text-gray-600 mt-1">系统状态和配置</p>
+        <p className="text-gray-500 dark:text-gray-400 mt-1 ml-10">系统状态和配置</p>
       </div>
 
-      {/* 系统状态 */}
-      <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+      {/* System Status */}
+      <GlassCard className="p-6 space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">系统状态</h3>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-white">系统状态</h3>
           <button
             onClick={() => {
               onRefresh();
               fetchModels();
             }}
-            className="flex items-center space-x-1 text-sm text-primary-600 hover:text-primary-700"
+            className="flex items-center space-x-1 text-sm text-gray-600 dark:text-white hover:text-gray-700 dark:hover:text-gray-100 transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             <span>刷新</span>
@@ -142,86 +144,88 @@ export function Settings({ health, onRefresh }: SettingsProps) {
         </div>
 
         {health ? (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-              <span className="text-gray-600">服务器状态</span>
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between p-3 backdrop-blur-lg bg-white/30 dark:bg-white/[0.03] rounded-xl border border-white/15 dark:border-white/[0.05]">
+              <span className="text-gray-600 dark:text-gray-400 text-sm">服务器状态</span>
               <div className="flex items-center space-x-2">
-                <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-green-600">正常</span>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
+                <span className="text-emerald-600 dark:text-emerald-400 text-sm font-medium">正常</span>
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-              <span className="text-gray-600">模型状态</span>
+            <div className="flex items-center justify-between p-3 backdrop-blur-lg bg-white/30 dark:bg-white/[0.03] rounded-xl border border-white/15 dark:border-white/[0.05]">
+              <span className="text-gray-600 dark:text-gray-400 text-sm">模型状态</span>
               <div className="flex items-center space-x-2">
                 {health.model_loaded ? (
                   <>
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                    <span className="text-green-600">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
+                    <span className="text-emerald-600 dark:text-emerald-400 text-sm font-medium">
                       已加载 {health.current_model ? `(${MODEL_LABELS[health.current_model] || health.current_model})` : ""}
                     </span>
                   </>
                 ) : (
                   <>
-                    <XCircle className="w-5 h-5 text-yellow-600" />
-                    <span className="text-yellow-600">未加载</span>
+                    <div className="w-2 h-2 rounded-full bg-amber-500 shadow-lg shadow-amber-500/50" />
+                    <span className="text-amber-600 dark:text-amber-400 text-sm font-medium">未加载</span>
                   </>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 bg-white rounded-lg">
-              <span className="text-gray-600">生成模式</span>
+            <div className="flex items-center justify-between p-3 backdrop-blur-lg bg-white/30 dark:bg-white/[0.03] rounded-xl border border-white/15 dark:border-white/[0.05]">
+              <span className="text-gray-600 dark:text-gray-400 text-sm">生成模式</span>
               <div className="flex items-center space-x-2">
                 {streamingMode === "streaming" ? (
-                  <Zap className="w-5 h-5 text-blue-600" />
+                  <Zap className="w-4 h-4 text-gray-600 dark:text-white" />
                 ) : (
-                  <Cpu className="w-5 h-5 text-gray-600" />
+                  <Cpu className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 )}
-                <span className="text-gray-700">{streamingMode === "streaming" ? "流式" : "非流式"}</span>
+                <span className="text-gray-700 dark:text-gray-300 text-sm">{streamingMode === "streaming" ? "流式" : "非流式"}</span>
               </div>
             </div>
 
             {health.error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm">{health.error}</p>
-              </div>
+              <GlassCard variant="subtle" className="p-3 border-red-300/30 dark:border-red-500/15">
+                <p className="text-red-500 dark:text-red-400 text-sm">{health.error}</p>
+              </GlassCard>
             )}
           </div>
         ) : (
-          <div className="text-center py-4 text-gray-500">无法获取状态</div>
+          <div className="text-center py-4 text-gray-500 dark:text-gray-400">无法获取状态</div>
         )}
-      </div>
+      </GlassCard>
 
-      {/* 生成设置 */}
-      <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900">生成设置</h3>
+      {/* Generation Settings */}
+      <GlassCard className="p-6 space-y-4">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white">生成设置</h3>
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between p-3 bg-white rounded-lg">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 backdrop-blur-lg bg-white/30 dark:bg-white/[0.03] rounded-xl border border-white/15 dark:border-white/[0.05]">
             <div>
-              <span className="text-gray-700 font-medium">流式生成</span>
-              <p className="text-sm text-gray-500">开启后音频将边生成边传输</p>
+              <span className="text-gray-700 dark:text-gray-200 font-medium text-sm">流式生成</span>
+              <p className="text-xs text-gray-500 dark:text-gray-400">开启后音频将边生成边传输</p>
             </div>
             <button
               onClick={handleStreamingToggle}
               disabled={actionLoading === "mode"}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                streamingMode === "streaming" ? "bg-primary-600" : "bg-gray-300"
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-200 ${
+                streamingMode === "streaming"
+                  ? "bg-gradient-to-r from-gray-700 to-gray-900 shadow-sm shadow-gray-900/30"
+                  : "bg-gray-300/60 dark:bg-white/[0.1]"
               } ${actionLoading === "mode" ? "opacity-50" : ""}`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform duration-200 ${
                   streamingMode === "streaming" ? "translate-x-6" : "translate-x-1"
                 }`}
               />
             </button>
           </div>
 
-          <div className="p-3 bg-white rounded-lg space-y-2">
+          <div className="p-3 backdrop-blur-lg bg-white/30 dark:bg-white/[0.03] rounded-xl border border-white/15 dark:border-white/[0.05] space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-gray-700 font-medium">Chunk Size</span>
-              <span className="text-sm text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{chunkSize}</span>
+              <span className="text-gray-700 dark:text-gray-200 font-medium text-sm">Chunk Size</span>
+              <span className="text-xs text-gray-500 dark:text-gray-400 backdrop-blur-lg bg-white/40 dark:bg-white/[0.06] px-2 py-0.5 rounded-full">{chunkSize}</span>
             </div>
             <input
               type="range"
@@ -231,31 +235,31 @@ export function Settings({ health, onRefresh }: SettingsProps) {
               value={chunkSize}
               onChange={(e) => handleChunkSizeChange(parseInt(e.target.value))}
               disabled={actionLoading === "chunk"}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+              className="w-full h-1.5 bg-gray-200 dark:bg-white/[0.08] rounded-lg appearance-none cursor-pointer accent-gray-700 dark:accent-white"
             />
-            <div className="flex justify-between text-xs text-gray-400">
+            <div className="flex justify-between text-[11px] text-gray-400 dark:text-gray-500">
               <span>1 (低延迟)</span>
               <span>24 (高质量)</span>
             </div>
           </div>
         </div>
-      </div>
+      </GlassCard>
 
-      {/* 模型管理 */}
-      <div className="bg-gray-50 rounded-lg p-6 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center space-x-2">
-          <HardDrive className="w-5 h-5 text-primary-600" />
+      {/* Model Management */}
+      <GlassCard className="p-6 space-y-4">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center space-x-2">
+          <HardDrive className="w-5 h-5 text-gray-600 dark:text-white" />
           <span>模型管理</span>
         </h3>
 
         {models ? (
           <div className="space-y-3">
-            <div className="p-3 bg-white rounded-lg">
-              <div className="text-sm text-gray-600 mb-2">
+            <div className="p-3 backdrop-blur-lg bg-white/30 dark:bg-white/[0.03] rounded-xl border border-white/15 dark:border-white/[0.05]">
+              <div className="text-sm text-gray-600 dark:text-gray-400">
                 当前模型: {models.current ? (
-                  <span className="font-medium text-gray-900">{MODEL_LABELS[models.current] || models.current}</span>
+                  <span className="font-medium text-gray-900 dark:text-white">{MODEL_LABELS[models.current] || models.current}</span>
                 ) : (
-                  <span className="text-yellow-600">无</span>
+                  <span className="text-amber-500 dark:text-amber-400">无</span>
                 )}
               </div>
             </div>
@@ -266,10 +270,10 @@ export function Settings({ health, onRefresh }: SettingsProps) {
                   key={key}
                   onClick={() => handleLoadModel(key)}
                   disabled={actionLoading === `load-${key}` || models.current === key}
-                  className={`flex items-center justify-center space-x-1 px-3 py-2 rounded-lg text-sm transition-all ${
+                  className={`flex items-center justify-center space-x-1 px-3 py-2.5 rounded-xl text-sm transition-all duration-200 ${
                     models.current === key
-                      ? "bg-primary-100 text-primary-700 border border-primary-300"
-                      : "bg-white text-gray-700 border border-gray-200 hover:border-primary-400 hover:text-primary-600"
+                      ? "bg-gradient-to-r from-gray-900/15 to-gray-900/15 dark:from-white/10 dark:to-white/10 text-gray-900 dark:text-gray-100 border border-gray-300/30 dark:border-gray-400/15 shadow-sm"
+                      : "backdrop-blur-lg bg-white/40 dark:bg-white/[0.04] text-gray-700 dark:text-gray-300 border border-white/25 dark:border-white/[0.08] hover:bg-white/60 dark:hover:bg-white/[0.06] hover:border-gray-300/30 dark:hover:border-gray-400/15"
                   } ${actionLoading === `load-${key}` ? "opacity-50" : ""}`}
                 >
                   {actionLoading === `load-${key}` ? (
@@ -281,10 +285,12 @@ export function Settings({ health, onRefresh }: SettingsProps) {
               ))}
             </div>
 
-            <button
+            <GlassButton
               onClick={handleUnloadModel}
               disabled={actionLoading === "unload" || !models.loaded}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              variant="danger"
+              size="md"
+              className="w-full"
             >
               {actionLoading === "unload" ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -292,32 +298,32 @@ export function Settings({ health, onRefresh }: SettingsProps) {
                 <Trash2 className="w-4 h-4" />
               )}
               <span>卸载当前模型</span>
-            </button>
+            </GlassButton>
           </div>
         ) : (
-          <div className="text-center py-4 text-gray-500">无法获取模型信息</div>
+          <div className="text-center py-4 text-gray-500 dark:text-gray-400">无法获取模型信息</div>
         )}
-      </div>
+      </GlassCard>
 
-      {/* 操作消息 */}
+      {/* Action Message */}
       {actionMessage && (
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-blue-700 text-sm">{actionMessage}</p>
-        </div>
+        <GlassCard variant="subtle" className="p-3 border-gray-300/30 dark:border-gray-400/15">
+          <p className="text-gray-700 dark:text-white text-sm">{actionMessage}</p>
+        </GlassCard>
       )}
 
-      {/* 关于 */}
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">关于</h3>
-        <div className="space-y-2 text-gray-600">
-          <p><strong>QianYU TTS</strong> - 基于 Qwen3-TTS 的文本转语音桌面应用</p>
+      {/* About */}
+      <GlassCard variant="subtle" className="p-6">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">关于</h3>
+        <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+          <p><strong className="text-gray-800 dark:text-gray-200">QianYU TTS</strong> - 基于 Qwen3-TTS 的文本转语音桌面应用</p>
           <p>版本：1.0.0</p>
           <p>功能：声音设计、语音克隆、自定义音色</p>
-          <p className="text-sm text-gray-500 mt-4">
+          <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
             本工具基于阿里巴巴通义实验室 Qwen 团队研发的 Qwen3-TTS 模型
           </p>
         </div>
-      </div>
+      </GlassCard>
     </div>
   );
 }

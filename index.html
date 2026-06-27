@@ -5,9 +5,193 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>QianYU TTS - 文本转语音工具</title>
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; }
+      body {
+        font-family: Inter, system-ui, -apple-system, sans-serif;
+        background: linear-gradient(135deg, #f7f8fa, #f0f1f4, #ebedf0);
+        color: #1e293b;
+      }
+      #preloader {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .preloader-inner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+      }
+      .preloader-svg-wrap {
+        width: 420px;
+        max-width: 80vw;
+      }
+      .preloader-text {
+        font-size: 14px; color: #94a3b8; letter-spacing: 0.05em;
+      }
+
+      /* ── Line draw animation (CSS, fires immediately) ── */
+      .pl-line {
+        stroke-dasharray: 1 1;
+        stroke-dashoffset: 1;
+        animation: pl-draw 1s cubic-bezier(0.25,0.1,0.5,1) forwards;
+      }
+      @keyframes pl-draw {
+        to { stroke-dashoffset: 0; }
+      }
+
+      /* ── Circle light pulse ── */
+      .pl-circle {
+        animation: pl-pulse 1.2s ease-in-out infinite alternate;
+      }
+      @keyframes pl-pulse {
+        0% { opacity: 0.4; r: 5; }
+        100% { opacity: 1; r: 8; }
+      }
+
+      /* ── Text shimmer ── */
+      .pl-text {
+        animation: pl-shimmer 3s ease-in-out infinite alternate;
+      }
+      @keyframes pl-shimmer {
+        0% { opacity: 0.5; }
+        100% { opacity: 1; }
+      }
+
+      /* ── Connection pins pop ── */
+      .pl-pin {
+        opacity: 0;
+        animation: pl-pin-in 0.4s ease-out forwards;
+      }
+      @keyframes pl-pin-in {
+        0% { opacity: 0; transform: scaleY(0); }
+        100% { opacity: 1; transform: scaleY(1); }
+      }
+      .pl-pin:nth-child(1) { animation-delay: 0.1s; }
+      .pl-pin:nth-child(2) { animation-delay: 0.15s; }
+      .pl-pin:nth-child(3) { animation-delay: 0.2s; }
+      .pl-pin:nth-child(4) { animation-delay: 0.25s; }
+      .pl-pin:nth-child(5) { animation-delay: 0.3s; }
+      .pl-pin:nth-child(6) { animation-delay: 0.35s; }
+      .pl-pin:nth-child(7) { animation-delay: 0.4s; }
+      .pl-pin:nth-child(8) { animation-delay: 0.45s; }
+
+      /* ── Marker dot pop ── */
+      .pl-marker-dot {
+        animation: pl-dot-pop 0.5s ease-out forwards;
+        transform-origin: center;
+      }
+      @keyframes pl-dot-pop {
+        0% { r: 0; }
+        60% { r: 3; }
+        100% { r: 2; }
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="preloader">
+        <div class="preloader-inner">
+          <div class="preloader-svg-wrap">
+            <svg viewBox="0 0 200 100" style="display:block;width:100%;height:auto">
+              <!-- Paths with CSS line-draw animation -->
+              <g stroke="#94a3b8" fill="none" stroke-width="0.3" markerStart="url(#pl-cpu-circle-marker)">
+                <path class="pl-line" pathLength="1" d="M 10 20 h 79.5 q 5 0 5 5 v 30"/>
+                <path class="pl-line" pathLength="1" d="M 180 10 h -69.7 q -5 0 -5 5 v 30"/>
+                <path class="pl-line" pathLength="1" d="M 130 20 v 21.8 q 0 5 -5 5 h -10"/>
+                <path class="pl-line" pathLength="1" d="M 170 80 v -21.8 q 0 -5 -5 -5 h -50"/>
+                <path class="pl-line" pathLength="1" d="M 135 65 h 15 q 5 0 5 5 v 10 q 0 5 -5 5 h -39.8 q -5 0 -5 -5 v -20"/>
+                <path class="pl-line" pathLength="1" d="M 94.8 95 v -36"/>
+                <path class="pl-line" pathLength="1" d="M 88 88 v -15 q 0 -5 -5 -5 h -10 q -5 0 -5 -5 v -5 q 0 -5 5 -5 h 14"/>
+                <path class="pl-line" pathLength="1" d="M 30 30 h 25 q 5 0 5 5 v 6.5 q 0 5 5 5 h 20"/>
+              </g>
+
+              <!-- Animated light circles -->
+              <g mask="url(#pl-cpu-mask-1)">
+                <circle class="pl-circle" cx="10" cy="20" r="8" fill="url(#pl-cpu-blue-grad)"/>
+              </g>
+              <g mask="url(#pl-cpu-mask-2)">
+                <circle class="pl-circle" cx="180" cy="10" r="8" fill="url(#pl-cpu-yellow-grad)" style="animation-delay:0.15s"/>
+              </g>
+              <g mask="url(#pl-cpu-mask-3)">
+                <circle class="pl-circle" cx="130" cy="20" r="8" fill="url(#pl-cpu-pinkish-grad)" style="animation-delay:0.3s"/>
+              </g>
+              <g mask="url(#pl-cpu-mask-4)">
+                <circle class="pl-circle" cx="170" cy="80" r="8" fill="url(#pl-cpu-white-grad)" style="animation-delay:0.45s"/>
+              </g>
+              <g mask="url(#pl-cpu-mask-5)">
+                <circle class="pl-circle" cx="135" cy="65" r="8" fill="url(#pl-cpu-green-grad)" style="animation-delay:0.6s"/>
+              </g>
+              <g mask="url(#pl-cpu-mask-6)">
+                <circle class="pl-circle" cx="94.8" cy="95" r="8" fill="url(#pl-cpu-orange-grad)" style="animation-delay:0.75s"/>
+              </g>
+              <g mask="url(#pl-cpu-mask-7)">
+                <circle class="pl-circle" cx="88" cy="88" r="8" fill="url(#pl-cpu-cyan-grad)" style="animation-delay:0.9s"/>
+              </g>
+              <g mask="url(#pl-cpu-mask-8)">
+                <circle class="pl-circle" cx="30" cy="30" r="8" fill="url(#pl-cpu-rose-grad)" style="animation-delay:1.05s"/>
+              </g>
+
+              <!-- CPU Box -->
+              <g>
+                <g fill="url(#pl-cpu-connection-gradient)">
+                  <rect class="pl-pin" x="93" y="37" width="2.5" height="5" rx="0.7"/>
+                  <rect class="pl-pin" x="104" y="37" width="2.5" height="5" rx="0.7"/>
+                  <rect class="pl-pin" x="116.3" y="44" width="2.5" height="5" rx="0.7" transform="rotate(90 116.25 45.5)"/>
+                  <rect class="pl-pin" x="122.8" y="44" width="2.5" height="5" rx="0.7" transform="rotate(90 116.25 45.5)"/>
+                  <rect class="pl-pin" x="104" y="16" width="2.5" height="5" rx="0.7" transform="rotate(180 105.25 39.5)"/>
+                  <rect class="pl-pin" x="114.5" y="16" width="2.5" height="5" rx="0.7" transform="rotate(180 105.25 39.5)"/>
+                  <rect class="pl-pin" x="80" y="-13.6" width="2.5" height="5" rx="0.7" transform="rotate(270 115.25 19.5)"/>
+                  <rect class="pl-pin" x="87" y="-13.6" width="2.5" height="5" rx="0.7" transform="rotate(270 115.25 19.5)"/>
+                </g>
+                <rect x="85" y="40" width="30" height="20" rx="2" fill="#181818" filter="url(#pl-cpu-light-shadow)"/>
+                <text class="pl-text" x="100" y="50" fontSize="7" text-anchor="middle" dominant-baseline="central" fill="url(#pl-cpu-text-gradient)" fontWeight="600" letterSpacing="0.05em">仟语</text>
+              </g>
+
+              <defs>
+                <mask id="pl-cpu-mask-1"><path d="M 10 20 h 79.5 q 5 0 5 5 v 24" stroke-width="0.5" stroke="white"/></mask>
+                <mask id="pl-cpu-mask-2"><path d="M 180 10 h -69.7 q -5 0 -5 5 v 24" stroke-width="0.5" stroke="white"/></mask>
+                <mask id="pl-cpu-mask-3"><path d="M 130 20 v 21.8 q 0 5 -5 5 h -10" stroke-width="0.5" stroke="white"/></mask>
+                <mask id="pl-cpu-mask-4"><path d="M 170 80 v -21.8 q 0 -5 -5 -5 h -50" stroke-width="0.5" stroke="white"/></mask>
+                <mask id="pl-cpu-mask-5"><path d="M 135 65 h 15 q 5 0 5 5 v 10 q 0 5 -5 5 h -39.8 q -5 0 -5 -5 v -20" stroke-width="0.5" stroke="white"/></mask>
+                <mask id="pl-cpu-mask-6"><path d="M 94.8 95 v -36" stroke-width="0.5" stroke="white"/></mask>
+                <mask id="pl-cpu-mask-7"><path d="M 88 88 v -15 q 0 -5 -5 -5 h -10 q -5 0 -5 -5 v -5 q 0 -5 5 -5 h 14" stroke-width="0.5" stroke="white"/></mask>
+                <mask id="pl-cpu-mask-8"><path d="M 30 30 h 25 q 5 0 5 5 v 6.5 q 0 5 5 5 h 20" stroke-width="0.5" stroke="white"/></mask>
+
+                <radialGradient id="pl-cpu-blue-grad" fx="1"><stop offset="0%" stop-color="#00E8ED"/><stop offset="50%" stop-color="#08F"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+                <radialGradient id="pl-cpu-yellow-grad" fx="1"><stop offset="0%" stop-color="#FFD800"/><stop offset="50%" stop-color="#FFD800"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+                <radialGradient id="pl-cpu-pinkish-grad" fx="1"><stop offset="0%" stop-color="#830CD1"/><stop offset="50%" stop-color="#FF008B"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+                <radialGradient id="pl-cpu-white-grad" fx="1"><stop offset="0%" stop-color="white"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+                <radialGradient id="pl-cpu-green-grad" fx="1"><stop offset="0%" stop-color="#22c55e"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+                <radialGradient id="pl-cpu-orange-grad" fx="1"><stop offset="0%" stop-color="#f97316"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+                <radialGradient id="pl-cpu-cyan-grad" fx="1"><stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+                <radialGradient id="pl-cpu-rose-grad" fx="1"><stop offset="0%" stop-color="#f43f5e"/><stop offset="100%" stop-color="transparent"/></radialGradient>
+
+                <filter id="pl-cpu-light-shadow" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="1.5" dy="1.5" stdDeviation="1" flood-color="black" flood-opacity="0.1"/></filter>
+                <marker id="pl-cpu-circle-marker" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="18" markerHeight="18">
+                  <circle class="pl-marker-dot" cx="5" cy="5" r="2" fill="black" stroke="#232323" stroke-width="0.5"/>
+                </marker>
+                <linearGradient id="pl-cpu-connection-gradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4F4F4F"/><stop offset="60%" stop-color="#121214"/></linearGradient>
+                <linearGradient id="pl-cpu-text-gradient" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%" stop-color="#666666"><animate attributeName="offset" values="-2; -1; 0" dur="5s" repeatCount="indefinite" calcMode="spline" keyTimes="0; 0.5; 1" keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"/></stop>
+                  <stop offset="25%" stop-color="white"><animate attributeName="offset" values="-1; 0; 1" dur="5s" repeatCount="indefinite" calcMode="spline" keyTimes="0; 0.5; 1" keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"/></stop>
+                  <stop offset="50%" stop-color="#666666"><animate attributeName="offset" values="0; 1; 2;" dur="5s" repeatCount="indefinite" calcMode="spline" keyTimes="0; 0.5; 1" keySplines="0.4 0 0.2 1; 0.4 0 0.2 1"/></stop>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <span class="preloader-text">加载中...</span>
+        </div>
+      </div>
+    </div>
+    <script>
+      (function(){
+        var el = document.getElementById('preloader');
+        if (el) { void el.offsetWidth; }
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

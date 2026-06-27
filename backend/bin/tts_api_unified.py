@@ -652,7 +652,7 @@ async def create_speech(req: SpeechRequest):
 
         # ── Voice Clone mode (saved voice) ──
         voice_id = req.voice
-        if voice_id and voice_id not in ("alloy", "voice_003"):
+        if voice_id and voice_id != "alloy":
             logger.info(f"Voice Clone (saved): voice={voice_id}, streaming={streaming}")
             if streaming:
                 return _wav_streaming_response(stream_voice_clone_with_saved(req.input, language, voice_id), fmt)

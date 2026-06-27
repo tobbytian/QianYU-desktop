@@ -8,6 +8,7 @@ import {
   importVoices,
   type Voice,
 } from "@/services/api";
+import { GlassCard, GlassInput } from "./ui";
 import {
   Users,
   RefreshCw,
@@ -180,20 +181,23 @@ export function VoiceManager() {
 
   return (
     <div className="space-y-6">
+      {/* Title */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-          <Users className="w-6 h-6 text-primary-600" />
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-500 dark:from-amber-400 dark:to-orange-400 rounded-lg flex items-center justify-center">
+            <Users className="w-4 h-4 text-white" />
+          </div>
           <span>音色管理</span>
         </h2>
-        <p className="text-gray-600 mt-1">管理已保存的音色，支持重命名、批量导入导出和删除</p>
+        <p className="text-gray-500 dark:text-gray-400 mt-1 ml-10">管理已保存的音色，支持重命名、批量导入导出和删除</p>
       </div>
 
-      {/* 操作栏 */}
+      {/* Action Bar */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center space-x-2">
           <button
             onClick={toggleSelectAll}
-            className="flex items-center space-x-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="flex items-center space-x-1.5 px-3 py-2 text-sm backdrop-blur-lg bg-white/40 dark:bg-white/[0.06] border border-white/25 dark:border-white/[0.08] text-gray-600 dark:text-gray-300 rounded-xl hover:bg-white/60 dark:hover:bg-white/[0.08] transition-all duration-200"
           >
             {selectedIds.size === voices.length && voices.length > 0 ? (
               <CheckSquare className="w-4 h-4" />
@@ -203,13 +207,13 @@ export function VoiceManager() {
             <span>全选</span>
           </button>
           {selectedIds.size > 0 && (
-            <span className="text-sm text-gray-500">已选 {selectedIds.size} 个</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">已选 {selectedIds.size} 个</span>
           )}
         </div>
         <div className="flex items-center space-x-2">
           <button
             onClick={() => fetchVoices()}
-            className="flex items-center space-x-1 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="flex items-center space-x-1.5 px-3 py-2 text-sm backdrop-blur-lg bg-white/40 dark:bg-white/[0.06] border border-white/25 dark:border-white/[0.08] text-gray-600 dark:text-gray-300 rounded-xl hover:bg-white/60 dark:hover:bg-white/[0.08] transition-all duration-200"
           >
             <RefreshCw className="w-4 h-4" />
             <span>刷新</span>
@@ -224,7 +228,7 @@ export function VoiceManager() {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={loading}
-            className="flex items-center space-x-1 px-3 py-2 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50"
+            className="flex items-center space-x-1.5 px-3 py-2 text-sm backdrop-blur-lg bg-gray-500/10 dark:bg-white/[0.08] border border-gray-300/30 dark:border-gray-400/15 text-gray-700 dark:text-white rounded-xl hover:bg-gray-500/15 dark:hover:bg-white/12 transition-all duration-200 disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
             <span>导入</span>
@@ -232,7 +236,7 @@ export function VoiceManager() {
           <button
             onClick={() => handleExport(selectedIds.size > 0 ? Array.from(selectedIds) : undefined)}
             disabled={loading || voices.length === 0}
-            className="flex items-center space-x-1 px-3 py-2 text-sm bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
+            className="flex items-center space-x-1.5 px-3 py-2 text-sm backdrop-blur-lg bg-emerald-500/10 dark:bg-emerald-400/[0.08] border border-emerald-300/30 dark:border-emerald-400/15 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-emerald-500/15 dark:hover:bg-emerald-400/12 transition-all duration-200 disabled:opacity-50"
           >
             <Upload className="w-4 h-4" />
             <span>{selectedIds.size > 0 ? `导出选中 (${selectedIds.size})` : "导出全部"}</span>
@@ -241,7 +245,7 @@ export function VoiceManager() {
             <button
               onClick={handleBatchDelete}
               disabled={loading}
-              className="flex items-center space-x-1 px-3 py-2 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50"
+              className="flex items-center space-x-1.5 px-3 py-2 text-sm backdrop-blur-lg bg-red-500/10 dark:bg-red-400/[0.08] border border-red-300/30 dark:border-red-400/15 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-500/15 dark:hover:bg-red-400/12 transition-all duration-200 disabled:opacity-50"
             >
               <Trash2 className="w-4 h-4" />
               <span>删除选中 ({selectedIds.size})</span>
@@ -250,42 +254,45 @@ export function VoiceManager() {
         </div>
       </div>
 
-      {/* 消息提示 */}
+      {/* Message */}
       {message && (
-        <div
-          className={`p-3 rounded-lg text-sm ${
+        <GlassCard
+          variant="subtle"
+          className={`p-3 text-sm ${
             message.type === "success"
-              ? "bg-green-50 border border-green-200 text-green-700"
-              : "bg-red-50 border border-red-200 text-red-700"
+              ? "border-emerald-300/30 dark:border-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+              : "border-red-300/30 dark:border-red-500/15 text-red-500 dark:text-red-400"
           }`}
         >
           {message.text}
-        </div>
+        </GlassCard>
       )}
 
-      {/* 音色列表 */}
+      {/* Voice List */}
       {voices.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
-          <Users className="w-12 h-12 mx-auto mb-3" />
-          <p>暂无已保存的音色</p>
-          <p className="text-sm mt-1">在声音设计或语音克隆页面保存音色后，可在此处管理</p>
+        <div className="text-center py-16 text-gray-400 dark:text-gray-500">
+          <Users className="w-14 h-14 mx-auto mb-4 opacity-40" />
+          <p className="font-medium">暂无已保存的音色</p>
+          <p className="text-sm mt-1 text-gray-400/70 dark:text-gray-500/70">在声音设计或语音克隆页面保存音色后，可在此处管理</p>
         </div>
       ) : (
         <div className="space-y-2">
           {voices.map((voice) => (
             <div
               key={voice.id}
-              className={`flex items-center justify-between p-3 bg-white rounded-lg border transition-all ${
-                selectedIds.has(voice.id) ? "border-primary-300 bg-primary-50" : "border-gray-200 hover:border-gray-300"
+              className={`flex items-center justify-between p-3.5 rounded-xl border transition-all duration-200 ${
+                selectedIds.has(voice.id)
+                  ? "bg-gray-500/[0.06] dark:bg-white/[0.04] border-gray-300/30 dark:border-gray-400/15"
+                  : "backdrop-blur-lg bg-white/30 dark:bg-white/[0.03] border-white/20 dark:border-white/[0.06] hover:bg-white/50 dark:hover:bg-white/[0.05]"
               }`}
             >
               <div className="flex items-center space-x-3">
                 <button
                   onClick={() => toggleSelect(voice.id)}
-                  className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${
+                  className={`w-5 h-5 rounded-md border flex items-center justify-center transition-all duration-200 ${
                     selectedIds.has(voice.id)
-                      ? "bg-primary-600 border-primary-600 text-white"
-                      : "border-gray-300 hover:border-primary-400"
+                      ? "bg-gradient-to-br from-gray-700 to-gray-900 border-gray-700 text-white shadow-sm shadow-gray-900/20"
+                      : "border-gray-300/50 dark:border-white/[0.15] hover:border-gray-400/50 dark:hover:border-gray-400/30"
                   }`}
                 >
                   {selectedIds.has(voice.id) && <Check className="w-3 h-3" />}
@@ -293,7 +300,7 @@ export function VoiceManager() {
                 <div>
                   {editingId === voice.id ? (
                     <div className="flex items-center space-x-2">
-                      <input
+                      <GlassInput
                         type="text"
                         value={editingName}
                         onChange={(e) => setEditingName(e.target.value)}
@@ -301,31 +308,31 @@ export function VoiceManager() {
                           if (e.key === "Enter") handleRename(voice.id);
                           if (e.key === "Escape") setEditingId(null);
                         }}
-                        className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                        className="px-2 py-1 text-sm w-40"
                         autoFocus
                       />
                       <button
                         onClick={() => handleRename(voice.id)}
                         disabled={loading}
-                        className="p-1 text-green-600 hover:text-green-700"
+                        className="p-1 text-emerald-500 dark:text-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-300 transition-colors"
                       >
                         <Check className="w-4 h-4" />
                       </button>
-                      <button onClick={() => setEditingId(null)} className="p-1 text-gray-400 hover:text-gray-600">
+                      <button onClick={() => setEditingId(null)} className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
                     <>
-                      <span className="font-medium text-gray-900">{voice.name}</span>
-                      <span className="text-xs text-gray-400 ml-2">{voice.id}</span>
+                      <span className="font-medium text-gray-900 dark:text-white">{voice.name}</span>
+                      <span className="text-xs text-gray-400 dark:text-gray-500 ml-2">{voice.id}</span>
                     </>
                   )}
                 </div>
               </div>
               <div className="flex items-center space-x-1">
                 {voice.created_at && (
-                  <span className="text-xs text-gray-400 mr-2">{voice.created_at}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 mr-2">{voice.created_at}</span>
                 )}
                 {editingId !== voice.id && (
                   <>
@@ -334,7 +341,7 @@ export function VoiceManager() {
                         setEditingId(voice.id);
                         setEditingName(voice.name);
                       }}
-                      className="p-2 text-gray-400 hover:text-primary-600 transition-colors"
+                      className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-white transition-colors rounded-lg hover:bg-white/40 dark:hover:bg-white/[0.05]"
                       title="重命名"
                     >
                       <Edit3 className="w-4 h-4" />
@@ -342,7 +349,7 @@ export function VoiceManager() {
                     <button
                       onClick={() => handleExport([voice.id])}
                       disabled={loading}
-                      className="p-2 text-gray-400 hover:text-green-600 transition-colors"
+                      className="p-2 text-gray-400 dark:text-gray-500 hover:text-emerald-500 dark:hover:text-emerald-400 transition-colors rounded-lg hover:bg-white/40 dark:hover:bg-white/[0.05]"
                       title="导出"
                     >
                       <Download className="w-4 h-4" />
@@ -350,7 +357,7 @@ export function VoiceManager() {
                     <button
                       onClick={() => handleDeleteSingle(voice.id)}
                       disabled={loading}
-                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                      className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors rounded-lg hover:bg-white/40 dark:hover:bg-white/[0.05]"
                       title="删除"
                     >
                       <Trash2 className="w-4 h-4" />

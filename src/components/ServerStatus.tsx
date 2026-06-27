@@ -1,4 +1,4 @@
-import { Cpu, Zap, CheckCircle, XCircle } from "lucide-react";
+import { Cpu, Zap } from "lucide-react";
 
 interface ServerStatusProps {
   ready: boolean;
@@ -8,26 +8,24 @@ interface ServerStatusProps {
 export function ServerStatus({ ready, cudaAvailable }: ServerStatusProps) {
   return (
     <div className="flex items-center space-x-4">
-      {/* CUDA Status */}
-      <div className="flex items-center space-x-2 px-3 py-1.5 bg-gray-100 rounded-full">
+      <div className="flex items-center space-x-2 px-3 py-1.5 backdrop-blur-lg bg-white/30 dark:bg-white/[0.05] border border-white/20 dark:border-white/[0.08] rounded-full">
         {cudaAvailable ? (
-          <Zap className="w-4 h-4 text-green-600" />
+          <Zap className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
         ) : (
-          <Cpu className="w-4 h-4 text-gray-600" />
+          <Cpu className="w-4 h-4 text-gray-500 dark:text-gray-400" />
         )}
-        <span className="text-sm font-medium text-gray-700">
+        <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
           {cudaAvailable ? "CUDA 加速" : "CPU 模式"}
         </span>
       </div>
 
-      {/* Server Status */}
       <div className="flex items-center space-x-2">
         {ready ? (
-          <CheckCircle className="w-5 h-5 text-green-600" />
+          <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
         ) : (
-          <XCircle className="w-5 h-5 text-red-600" />
+          <div className="w-2 h-2 rounded-full bg-red-500 shadow-lg shadow-red-500/50" />
         )}
-        <span className="text-sm text-gray-600">
+        <span className="text-xs text-gray-600 dark:text-gray-300">
           {ready ? "引擎就绪" : "引擎未就绪"}
         </span>
       </div>

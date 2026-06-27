@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
-use tauri::State;
+use tauri::{Manager, State};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct TTSRequest {
@@ -339,6 +339,14 @@ fn convert_to_wav(audio_data: &[f32], sample_rate: u32) -> Vec<u8> {
     wav
 }
 
+#[tauri::command]
+async fn signal_ready(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(win) = app.get_webview_window("main") {
+        let _ = win.show();
+    }
+    Ok(())
+}
+
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
@@ -358,7 +366,8 @@ pub fn run() {
             open_folder_dialog,
             open_save_dialog,
             save_audio_file,
-            save_bytes
+            save_bytes,
+            signal_ready
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

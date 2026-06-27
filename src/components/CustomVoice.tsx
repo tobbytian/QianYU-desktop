@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTTS } from "@/hooks/useTTS";
 import { generateCustomVoiceStreaming } from "@/services/api";
 import { AudioPlayer } from "./AudioPlayer";
+import { GlassCard, GlassButton, GlassInput, GlassTextarea } from "./ui";
 import { Loader2, Volume2, User } from "lucide-react";
 
 const LANGUAGES = [
@@ -40,32 +41,35 @@ export function CustomVoice() {
 
   return (
     <div className="space-y-6">
+      {/* Title */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-          <Volume2 className="w-6 h-6 text-primary-600" />
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 dark:from-emerald-400 dark:to-teal-400 rounded-lg flex items-center justify-center">
+            <Volume2 className="w-4 h-4 text-white" />
+          </div>
           <span>自定义音色</span>
         </h2>
-        <p className="text-gray-600 mt-1">使用官方预设的高质量说话人，支持情感控制</p>
+        <p className="text-gray-500 dark:text-gray-400 mt-1 ml-10">使用官方预设的高质量说话人，支持情感控制</p>
       </div>
 
+      {/* Form */}
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">要转换的文本</label>
-          <textarea
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">要转换的文本</label>
+          <GlassTextarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="输入要转换为语音的文本..."
             rows={4}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-all"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">语言</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">语言</label>
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 rounded-xl backdrop-blur-lg bg-white/50 dark:bg-white/[0.06] border border-white/30 dark:border-white/[0.1] text-gray-900 dark:text-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400/40 dark:focus:ring-gray-400/30 appearance-none cursor-pointer [&_option]:bg-white [&_option]:text-gray-900"
           >
             {LANGUAGES.map((lang) => (
               <option key={lang} value={lang}>{lang}</option>
@@ -73,46 +77,49 @@ export function CustomVoice() {
           </select>
         </div>
 
+        {/* Speaker Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">选择说话人</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">选择说话人</label>
           <div className="grid grid-cols-3 gap-2">
             {SPEAKERS.map((s) => (
               <button
                 key={s.id}
                 onClick={() => setSpeaker(s.id)}
-                className={`flex flex-col items-center p-3 rounded-lg border transition-all ${
+                className={`flex flex-col items-center p-3 rounded-xl border transition-all duration-200 ${
                   speaker === s.id
-                    ? "border-primary-500 bg-primary-50"
-                    : "border-gray-200 hover:border-gray-300"
+                    ? "bg-gradient-to-b from-emerald-500/10 to-teal-500/10 dark:from-emerald-400/[0.08] dark:to-teal-400/[0.08] border-emerald-400/40 dark:border-emerald-400/20 shadow-sm"
+                    : "backdrop-blur-lg bg-white/30 dark:bg-white/[0.03] border-white/20 dark:border-white/[0.06] hover:bg-white/50 dark:hover:bg-white/[0.06] hover:border-white/30 dark:hover:border-white/[0.1]"
                 }`}
               >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1 ${
-                  speaker === s.id ? "bg-primary-100" : "bg-gray-100"
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-1.5 transition-all duration-200 ${
+                  speaker === s.id
+                    ? "bg-gradient-to-br from-emerald-500 to-teal-500 dark:from-emerald-400 dark:to-teal-400 shadow-lg shadow-emerald-500/20"
+                    : "bg-white/40 dark:bg-white/[0.06]"
                 }`}>
-                  <User className={`w-5 h-5 ${speaker === s.id ? "text-primary-600" : "text-gray-500"}`} />
+                  <User className={`w-5 h-5 ${speaker === s.id ? "text-white" : "text-gray-500 dark:text-gray-400"}`} />
                 </div>
-                <span className="text-sm font-medium text-gray-900">{s.name}</span>
-                <span className="text-xs text-gray-500">{s.description}</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-white">{s.name}</span>
+                <span className="text-[11px] text-gray-500 dark:text-gray-400 text-center leading-tight">{s.description}</span>
               </button>
             ))}
           </div>
         </div>
 
+        {/* Style Instruct */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">风格指令（可选）</label>
-          <input
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">风格指令（可选）</label>
+          <GlassInput
             type="text"
             value={instruct}
             onChange={(e) => setInstruct(e.target.value)}
             placeholder="例如：用愤怒的语气、开心地、悲伤地"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
           />
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             {STYLE_EXAMPLES.map((style) => (
               <button
                 key={style}
                 onClick={() => setInstruct(style)}
-                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-primary-100 hover:text-primary-700 transition-colors"
+                className="px-3 py-1.5 text-xs backdrop-blur-lg bg-white/40 dark:bg-white/[0.06] border border-white/25 dark:border-white/[0.08] text-gray-600 dark:text-gray-300 rounded-full hover:bg-emerald-500/10 dark:hover:bg-emerald-400/10 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-300/30 dark:hover:border-emerald-400/20 transition-all duration-200"
               >
                 {style}
               </button>
@@ -121,46 +128,42 @@ export function CustomVoice() {
         </div>
 
         {loading ? (
-          <button
-            onClick={stopGeneration}
-            className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all"
-          >
+          <GlassButton onClick={stopGeneration} variant="danger" size="lg" className="w-full">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span>停止生成</span>
-          </button>
+          </GlassButton>
         ) : (
-          <button
-            onClick={handleGenerate}
-            disabled={!text.trim()}
-            className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
+          <GlassButton onClick={handleGenerate} disabled={!text.trim()} size="lg" className="w-full">
             <Volume2 className="w-5 h-5" />
             <span>开始合成</span>
-          </button>
+          </GlassButton>
         )}
       </div>
 
+      {/* Streaming Progress */}
       {loading && streamingProgress && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+        <GlassCard variant="subtle" className="p-4 space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-blue-700 font-medium">生成中...</span>
-            <span className="text-blue-600 text-xs">{(streamingProgress.elapsed / 1000).toFixed(1)}s</span>
+            <span className="text-gray-700 dark:text-white font-medium">生成中...</span>
+            <span className="text-gray-600 dark:text-white text-xs">{(streamingProgress.elapsed / 1000).toFixed(1)}s</span>
           </div>
-          <div className="w-full bg-blue-100 rounded-full h-2 overflow-hidden">
-            <div className="h-full bg-blue-500 rounded-full animate-pulse w-full" />
+          <div className="w-full bg-gray-200/70 dark:bg-gray-400/10 rounded-full h-1.5 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-200 dark:to-white rounded-full animate-pulse w-full" />
           </div>
           {streamingProgress.firstChunkTime !== null && (
-            <p className="text-blue-500 text-xs">首字延迟: {(streamingProgress.firstChunkTime / 1000).toFixed(2)}s</p>
+            <p className="text-gray-500/70 dark:text-gray-400/60 text-xs">首字延迟: {(streamingProgress.firstChunkTime / 1000).toFixed(2)}s</p>
           )}
-        </div>
+        </GlassCard>
       )}
 
+      {/* Error */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600">{error}</p>
-        </div>
+        <GlassCard variant="subtle" className="p-4 border-red-300/30 dark:border-red-500/15">
+          <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
+        </GlassCard>
       )}
 
+      {/* Audio Player */}
       <AudioPlayer
         url={audioUrl}
         duration={duration}

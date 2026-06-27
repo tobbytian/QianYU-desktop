@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTTS } from "@/hooks/useTTS";
 import { generateVoiceDesignStreaming, saveVoice } from "@/services/api";
 import { AudioPlayer } from "./AudioPlayer";
+import { GlassCard, GlassButton, GlassInput, GlassTextarea, GlassSelect } from "./ui";
 import { Loader2, Mic, Wand2, Save } from "lucide-react";
 
 const LANGUAGES = [
@@ -13,10 +14,12 @@ const EXAMPLE_DESCRIPTIONS = [
   "甜美的萝莉音", "成熟磁性的男声", "温柔的女声", "活泼开朗的少女音", "沉稳的播音腔",
 ];
 
+const DEFAULT_DESCRIPTION = "温柔的女声";
+
 export function VoiceDesign() {
   const [text, setText] = useState("哥哥，你回来啦，人家等了你好久好久了，要抱抱！");
   const [language, setLanguage] = useState("Auto");
-  const [description, setDescription] = useState("");
+  const [description, setDescription] = useState(DEFAULT_DESCRIPTION);
   const [saveName, setSaveName] = useState("");
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
@@ -25,7 +28,8 @@ export function VoiceDesign() {
 
   const handleGenerate = async () => {
     if (!text.trim()) return;
-    await generateStreaming(() => generateVoiceDesignStreaming(text.trim(), language, description));
+    const voiceDescription = description.trim() || DEFAULT_DESCRIPTION;
+    await generateStreaming(() => generateVoiceDesignStreaming(text.trim(), language, voiceDescription));
   };
 
   const handleSaveVoice = async () => {
@@ -49,56 +53,54 @@ export function VoiceDesign() {
 
   return (
     <div className="space-y-6">
+      {/* Title */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-          <Wand2 className="w-6 h-6 text-primary-600" />
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center space-x-2">
+          <div className="w-8 h-8 bg-gradient-to-br from-gray-700 to-gray-900 dark:from-gray-200 dark:to-white rounded-lg flex items-center justify-center">
+            <Wand2 className="w-4 h-4 text-white" />
+          </div>
           <span>声音设计</span>
         </h2>
-        <p className="text-gray-600 mt-1">
+        <p className="text-gray-500 dark:text-gray-400 mt-1 ml-10">
           通过自然语言描述创建定制化音色，如"甜美的萝莉音"、"成熟磁性的男声"
         </p>
       </div>
 
+      {/* Form */}
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">要转换的文本</label>
-          <textarea
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">要转换的文本</label>
+          <GlassTextarea
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="输入要转换为语音的文本..."
             rows={4}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-all"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">语言</label>
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
-          >
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">语言</label>
+          <GlassSelect value={language} onChange={(e) => setLanguage(e.target.value)}>
             {LANGUAGES.map((lang) => (
               <option key={lang} value={lang}>{lang}</option>
             ))}
-          </select>
+          </GlassSelect>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">声音描述</label>
-          <input
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">声音描述</label>
+          <GlassInput
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="例如：甜美的萝莉音、成熟磁性的男声"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
           />
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-2">
             {EXAMPLE_DESCRIPTIONS.map((desc) => (
               <button
                 key={desc}
                 onClick={() => setDescription(desc)}
-                className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded-full hover:bg-primary-100 hover:text-primary-700 transition-colors"
+                className="px-3 py-1.5 text-xs backdrop-blur-lg bg-white/40 dark:bg-white/[0.06] border border-white/25 dark:border-white/[0.08] text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-500/10 dark:hover:bg-white/10 hover:text-gray-800 dark:hover:text-white hover:border-gray-300/30 dark:hover:border-gray-400/20 transition-all duration-200"
               >
                 {desc}
               </button>
@@ -107,46 +109,42 @@ export function VoiceDesign() {
         </div>
 
         {loading ? (
-          <button
-            onClick={stopGeneration}
-            className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all"
-          >
+          <GlassButton onClick={stopGeneration} variant="danger" size="lg" className="w-full">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span>停止生成</span>
-          </button>
+          </GlassButton>
         ) : (
-          <button
-            onClick={handleGenerate}
-            disabled={!text.trim()}
-            className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
+          <GlassButton onClick={handleGenerate} disabled={!text.trim()} size="lg" className="w-full">
             <Mic className="w-5 h-5" />
             <span>开始生成</span>
-          </button>
+          </GlassButton>
         )}
       </div>
 
+      {/* Streaming Progress */}
       {loading && streamingProgress && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+        <GlassCard variant="subtle" className="p-4 space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-blue-700 font-medium">生成中...</span>
-            <span className="text-blue-600 text-xs">{(streamingProgress.elapsed / 1000).toFixed(1)}s</span>
+            <span className="text-gray-700 dark:text-white font-medium">生成中...</span>
+            <span className="text-gray-600 dark:text-white text-xs">{(streamingProgress.elapsed / 1000).toFixed(1)}s</span>
           </div>
-          <div className="w-full bg-blue-100 rounded-full h-2 overflow-hidden">
-            <div className="h-full bg-blue-500 rounded-full animate-pulse w-full" />
+          <div className="w-full bg-gray-200/70 dark:bg-gray-400/10 rounded-full h-1.5 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-200 dark:to-white rounded-full animate-pulse w-full" />
           </div>
           {streamingProgress.firstChunkTime !== null && (
-            <p className="text-blue-500 text-xs">首字延迟: {(streamingProgress.firstChunkTime / 1000).toFixed(2)}s</p>
+            <p className="text-gray-500/70 dark:text-gray-400/60 text-xs">首字延迟: {(streamingProgress.firstChunkTime / 1000).toFixed(2)}s</p>
           )}
-        </div>
+        </GlassCard>
       )}
 
+      {/* Error */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600">{error}</p>
-        </div>
+        <GlassCard variant="subtle" className="p-4 border-red-300/30 dark:border-red-500/15">
+          <p className="text-red-500 dark:text-red-400 text-sm">{error}</p>
+        </GlassCard>
       )}
 
+      {/* Audio Player */}
       <AudioPlayer
         url={audioUrl}
         duration={duration}
@@ -154,25 +152,26 @@ export function VoiceDesign() {
         streamingPlayback={streamingPlayback}
       />
 
+      {/* Save Section */}
       {audioUrl && (
-        <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-          <h4 className="text-sm font-medium text-gray-700 flex items-center space-x-2">
+        <GlassCard variant="subtle" className="p-5 space-y-3">
+          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
             <Save className="w-4 h-4" />
             <span>保存此音色以便复用</span>
           </h4>
-          <p className="text-xs text-gray-500">保存后可在"语音克隆"标签页中直接使用此音色</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400">保存后可在"语音克隆"标签页中直接使用此音色</p>
           <div className="flex space-x-2">
-            <input
+            <GlassInput
               type="text"
               value={saveName}
               onChange={(e) => setSaveName(e.target.value)}
               placeholder="给音色起个名字"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm"
+              className="text-sm py-2"
             />
-            <button
+            <GlassButton
               onClick={handleSaveVoice}
               disabled={saveLoading || !saveName.trim()}
-              className="flex items-center space-x-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
+              size="sm"
             >
               {saveLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -180,14 +179,14 @@ export function VoiceDesign() {
                 <Save className="w-4 h-4" />
               )}
               <span>保存</span>
-            </button>
+            </GlassButton>
           </div>
           {saveMessage && (
-            <p className={`text-sm ${saveMessage.includes("成功") ? "text-green-600" : "text-red-600"}`}>
+            <p className={`text-sm ${saveMessage.includes("成功") ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
               {saveMessage}
             </p>
           )}
-        </div>
+        </GlassCard>
       )}
     </div>
   );
