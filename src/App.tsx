@@ -6,7 +6,7 @@ import { VoiceManager } from "./components/VoiceManager";
 import { Settings } from "./components/Settings";
 import { healthCheck, type HealthResponse } from "./services/api";
 import { useTheme } from "./hooks/useTheme";
-import { ThemeToggle, Loader } from "./components/ui";
+import { FallingPattern, ThemeToggle, Loader, WindowControls } from "./components/ui";
 import {
   Mic,
   Copy,
@@ -17,6 +17,17 @@ import {
 } from "lucide-react";
 
 type Tab = "voice-design" | "voice-clone" | "custom-voice" | "voice-manager" | "settings";
+
+const MODEL_LABELS: Record<string, string> = {
+  voice_design: "声音设计",
+  voice_clone: "语音克隆",
+  custom_voice: "自定义音色",
+};
+
+const MODE_LABELS: Record<string, string> = {
+  streaming: "流式生成",
+  "non-streaming": "非流式生成",
+};
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>("voice-design");
@@ -150,41 +161,55 @@ function App() {
 
   return (
     <div className="h-screen overflow-hidden flex flex-col">
+      <FallingPattern
+        className="pointer-events-none fixed inset-0 z-0 opacity-100 [mask-image:radial-gradient(ellipse_at_center,black,transparent_95%)]"
+        duration={150}
+        blurIntensity="0.35em"
+        density={0.8}
+      />
       {/* Header */}
-      <header className="flex-shrink-0 z-50 backdrop-blur-2xl bg-white/40 dark:bg-white/[0.03] border-b border-white/20 dark:border-white/[0.06]">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="relative flex-shrink-0 z-50 backdrop-blur-2xl bg-white/85 dark:bg-[#18181b]/90 border-b border-white/20 dark:border-white/[0.06]">
+        <div className="max-w-[1440px] mx-auto pl-4 pr-40 sm:pl-6 lg:pl-8">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-3">
+            <div data-tauri-drag-region className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-gray-700 to-gray-900 dark:from-gray-200 dark:to-white rounded-xl flex items-center justify-center shadow-lg shadow-gray-900/20">
                 <Volume2 className="w-6 h-6 text-white" />
               </div>
-              <div>
+              <div data-tauri-drag-region>
                 <h1 className="text-lg font-bold text-gray-900 dark:text-white">QianYU TTS</h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400">文本转语音工具</p>
               </div>
             </div>
+            <div data-tauri-drag-region className="flex-1 self-stretch" />
             <div className="flex items-center space-x-4">
               <div className="hidden sm:flex items-center space-x-2 px-3 py-1.5 backdrop-blur-lg bg-white/30 dark:bg-white/[0.05] border border-white/20 dark:border-white/[0.08] rounded-full">
                 <div className={`w-2 h-2 rounded-full ${health?.model_loaded ? "bg-emerald-500 shadow-lg shadow-emerald-500/50" : "bg-amber-500 shadow-lg shadow-amber-500/50"}`} />
                 <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                  {health?.model_loaded ? "模型已加载" : "模型未加载"}
+                  {health?.model_loaded
+                    ? `${health.current_model ? MODEL_LABELS[health.current_model] || health.current_model : "模型"}已加载`
+                    : "模型未加载"}
                 </span>
               </div>
               <div className="hidden sm:block text-xs text-gray-500 dark:text-gray-400 px-3 py-1.5 backdrop-blur-lg bg-white/30 dark:bg-white/[0.04] border border-white/20 dark:border-white/[0.06] rounded-full">
-                {health?.mode || "unknown"}
+                {health?.mode ? MODE_LABELS[health.mode] || health.mode : "未知模式"}
               </div>
-              <ThemeToggle theme={theme} onToggle={toggleTheme} />
+              <div data-tauri-drag-region="false">
+                <ThemeToggle theme={theme} onToggle={toggleTheme} />
+              </div>
             </div>
           </div>
+        </div>
+        <div data-tauri-drag-region="false" className="absolute right-2 top-1/2 -translate-y-1/2">
+          <WindowControls />
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 min-h-0 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-hidden">
+      <main className="relative z-10 flex-1 min-h-0 w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 overflow-hidden">
         <div className="h-full min-h-0 grid grid-cols-1 lg:grid-cols-[15rem_minmax(0,1fr)] gap-6">
           {/* Sidebar Navigation */}
           <nav className="min-w-0">
-            <div className="isolate overflow-hidden backdrop-blur-xl bg-white/40 dark:bg-white/[0.04] border border-white/20 dark:border-white/[0.06] rounded-2xl p-3 shadow-lg shadow-black/[0.03] dark:shadow-black/20">
+            <div className="isolate overflow-hidden backdrop-blur-xl bg-white/85 dark:bg-[#18181b]/90 border border-white/20 dark:border-white/[0.06] rounded-2xl p-3 shadow-lg shadow-black/[0.03] dark:shadow-black/20">
               <div className="space-y-1">
                 {tabs.map((tab) => {
                   const Icon = tab.icon;
@@ -214,7 +239,7 @@ function App() {
           {/* Content Area */}
           <div className="min-w-0 min-h-0 rounded-2xl overflow-hidden">
             <div ref={contentRef} className="h-full overflow-y-auto rounded-2xl scrollbar-none">
-              <div className={`min-h-full backdrop-blur-xl bg-white/50 dark:bg-white/[0.04] border border-white/25 dark:border-white/[0.07] rounded-2xl p-6 shadow-xl shadow-black/[0.04] dark:shadow-black/25 transition-opacity duration-[180ms] ease-out ${isTabFading ? "opacity-0" : "opacity-100"}`}>
+              <div className={`min-h-full backdrop-blur-xl bg-white/85 dark:bg-[#18181b]/90 border border-white/25 dark:border-white/[0.07] rounded-2xl p-6 shadow-xl shadow-black/[0.04] dark:shadow-black/25 transition-opacity duration-[180ms] ease-out ${isTabFading ? "opacity-0" : "opacity-100"}`}>
               <div className={activeTab === "voice-design" ? "block" : "hidden"}>
                 <VoiceDesign />
               </div>

@@ -42,7 +42,10 @@ export function VoiceDesign() {
       const blob = await response.blob();
       const file = new File([blob], "voice_design.wav", { type: "audio/wav" });
       const result = await saveVoice(saveName.trim(), file, text.trim());
-      setSaveMessage(`音色保存成功！ID: ${result.voice_id}`);
+      setSaveMessage(`音色保存成功！名称: ${result.name}，ID: ${result.voice_id}`);
+      window.dispatchEvent(new CustomEvent("qianyu-voices-updated", {
+        detail: { voiceId: result.voice_id },
+      }));
       setSaveName("");
     } catch (err) {
       setSaveMessage(`保存失败: ${err instanceof Error ? err.message : String(err)}`);
@@ -178,7 +181,7 @@ export function VoiceDesign() {
               ) : (
                 <Save className="w-4 h-4" />
               )}
-              <span>保存</span>
+              <span className="whitespace-nowrap">保存</span>
             </GlassButton>
           </div>
           {saveMessage && (

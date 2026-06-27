@@ -75,9 +75,12 @@ export function VoiceClone() {
     setSaveMessage(null);
     try {
       const result = await saveVoice(saveName.trim(), refAudioFile, refText);
-      setSaveMessage(`音色保存成功！ID: ${result.voice_id}`);
+      setSaveMessage(`音色保存成功！名称: ${result.name}，ID: ${result.voice_id}`);
       setSaveName("");
       await fetchVoices();
+      setSelectedVoiceId(result.voice_id);
+      setRefAudioFile(null);
+      setShowSaveSection(false);
     } catch (err) {
       setSaveMessage(`保存失败: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
@@ -104,6 +107,21 @@ export function VoiceClone() {
       setShowSaveSection(false);
     }
   };
+
+  useEffect(() => {
+    const handleVoicesUpdated = async (event: Event) => {
+      const voiceId = (event as CustomEvent<{ voiceId?: string }>).detail?.voiceId;
+      await fetchVoices();
+      if (voiceId) {
+        setSelectedVoiceId(voiceId);
+        setRefAudioFile(null);
+        setShowSaveSection(false);
+      }
+    };
+
+    window.addEventListener("qianyu-voices-updated", handleVoicesUpdated);
+    return () => window.removeEventListener("qianyu-voices-updated", handleVoicesUpdated);
+  }, [fetchVoices]);
 
   const canGenerate = text.trim() && (refAudioFile || selectedVoiceId);
 
@@ -254,7 +272,7 @@ export function VoiceClone() {
                 ) : (
                   <Save className="w-4 h-4" />
                 )}
-                <span>保存</span>
+                <span className="whitespace-nowrap">保存</span>
               </GlassButton>
             </div>
             {saveMessage && (

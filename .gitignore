@@ -50,3 +50,7 @@ vite.config.ts.timestamp-*
 backend/saved_voices/voice_registry.json
 backend/saved_voices/voice_002.pt
 backend/saved_voices/voice_001.pt
+backend/saved_voices/voice_003.pt
+backend/saved_voices/voice_004.pt
+backend/saved_voices/voice_005.pt
+backend/saved_voices/voice_006.pt

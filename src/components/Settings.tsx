@@ -58,6 +58,7 @@ export function Settings({ health, onRefresh }: SettingsProps) {
       await apiSetStreamingMode(newMode);
       setStreamingMode(newMode);
       setActionMessage(`已切换为 ${newMode === "streaming" ? "流式" : "非流式"} 模式`);
+      onRefresh();
     } catch (err) {
       setActionMessage(`切换失败: ${err instanceof Error ? err.message : String(err)}`);
     } finally {

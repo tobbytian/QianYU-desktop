@@ -7,6 +7,8 @@
     --gradient-from: #f7f8fa;
     --gradient-via: #f0f1f4;
     --gradient-to: #ebedf0;
+    --background: #f7f8fa;
+    --primary: rgba(31, 41, 55, 0.42);
     color-scheme: light;
   }
 
@@ -14,6 +16,8 @@
     --gradient-from: #151517;
     --gradient-via: #1c1c1f;
     --gradient-to: #111113;
+    --background: #111113;
+    --primary: rgba(255, 255, 255, 0.34);
     color-scheme: dark;
   }
 
